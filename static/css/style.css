@@ -64,6 +64,10 @@ div.draft {
     flex-direction: column;
 }
 
+.commander-return {
+    font-size: 24px;
+}
+
 h2 {
   font-size: 3em;
   margin-top: 40px;
@@ -101,13 +105,13 @@ form {
 }
 
 form input[type="test"] {
-    margin: 10px 0;
+    margin: 10px 0 30px;
     box-sizing: border-box;
     border: 1px solid black;
 }
 
 form input[type="submit"] {
-    margin: 10px 5px 10px;
+    margin: 10px 5px 30px;
     box-sizing: border-box;
     background-color: black;
     color: white;
