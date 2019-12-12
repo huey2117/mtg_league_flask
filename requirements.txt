@@ -2,7 +2,7 @@ beautifulsoup4==4.8.1
 certifi==2019.9.11
 chardet==3.0.4
 Click==7.0
-flask==1.1.1
+Flask==1.1.1
 gunicorn==19.10.0
 idna==2.8
 itsdangerous==1.1.0
