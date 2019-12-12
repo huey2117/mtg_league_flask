@@ -8,7 +8,6 @@ class Schema:
         self.create_users_table()
         self.create_commanders_table()
         self.create_user_commander_table()
-        self.populate_users()
 
     def __del__(self):
         # body of destructor
@@ -52,16 +51,6 @@ class Schema:
             name TEXT NOT NULL,
             color_id TEXT
         )
-        ;
-        """
-
-        self.conn.execute(query)
-
-    def populate_users(self):
-        query = """
-        INSERT OR REPLACE INTO users (username, active)
-        VALUES ('michaelh','A'), ('nathanl','A'),
-            ('matts','A'), ('jakel','A')
         ;
         """
 
@@ -174,19 +163,19 @@ class UserDraftingModel:
                 f'WHERE username = :usn'
 
         result = self.conn.execute(query, {"usn": usn}).fetchone()
-        return result
+        return result[0]
 
     def check_usercomm(self, uid):
-        query = f'SELECT c.name' \
-                f'FROM user_commander uc' \
-                f'LEFT JOIN commanders c' \
-                f'ON uc.commander_id = c.id' \
-                f'WHERE uc.user_id = :uid' \
+        query = f'SELECT c.name ' \
+                f'FROM user_commander uc ' \
+                f'LEFT JOIN commanders c ' \
+                f'ON uc.commander_id = c.id ' \
+                f'WHERE uc.user_id = :uid ' \
                 f'AND uc.commander_id IS NOT NULL'
 
         result = self.conn.execute(query, {"uid": uid}).fetchone()
         if result:
-            return result
+            return result[0]
         else:
             return False
 
@@ -200,12 +189,13 @@ class UserDraftingModel:
         """
 
         commanders = self.conn.execute(query).fetchall()
+
         if commanders:
             commander = random.choice(commanders)
             update_query = """
-                        UPDATE user_commander
-                        SET commander_id = :cid
-                        WHERE user_id = :uid
+                        INSERT OR REPLACE INTO user_commander
+                        (user_id, commander_id)
+                        VALUES (:uid, :cid)
                         """
             self.conn.execute(update_query, {"cid": commander[0], "uid": uid})
             return commander[1]

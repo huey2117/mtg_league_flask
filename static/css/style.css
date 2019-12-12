@@ -58,6 +58,12 @@ div.about {
           border-radius: 6px; */
 }
 
+div.draft {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
 h2 {
   font-size: 3em;
   margin-top: 40px;
@@ -88,6 +94,24 @@ h3 {
 .menu li a {
   color: black;
   text-decoration: none;
+}
+
+form {
+    display: flex;
+}
+
+form input[type="test"] {
+    margin: 10px 0;
+    box-sizing: border-box;
+    border: 1px solid black;
+}
+
+form input[type="submit"] {
+    margin: 10px 5px 10px;
+    box-sizing: border-box;
+    background-color: black;
+    color: white;
+    font-size: 14px;
 }
 
 footer {

@@ -69,8 +69,5 @@ def create_commanders():
 
 
 if __name__ == "__main__":
-    print("main is actually running")
-    app.debug = True
-    print("DB tables should build next")
     Schema()
     app.run()
