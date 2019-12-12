@@ -7,6 +7,9 @@ verify_ssl = true
 
 [packages]
 gunicorn = "*"
+flask = "*"
+jinja2 = "*"
+requests = "*"
 
 [requires]
 python_version = "3.8"
