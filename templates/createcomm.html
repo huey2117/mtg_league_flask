@@ -7,15 +7,12 @@
 <body>
     {% extends "layout.html" %}
     {% block content %}
-        <div class="draft">
-            <h1>Drafting Tool</h1>
-            <form action="/draft" method="post">
-                <input type="test" name="username" />
+        <div class="commander-container">
+            <h1>Commander List</h1>
+            <form method="post">
+                <textarea name="commlist"></textarea>
                 <input type="submit" />
             </form>
-            <strong>
-                {{ commander }}
-            </strong>
         </div>
     {% endblock %}
 </body>

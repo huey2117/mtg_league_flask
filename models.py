@@ -1,12 +1,14 @@
 import sqlite3
+import random
 
 
 class Schema:
     def __init__(self):
-        self.conn = sqlite3.connection("mtg_league.db")
+        self.conn = sqlite3.connect("mtg_league.db")
         self.create_users_table()
         self.create_commanders_table()
         self.create_user_commander_table()
+        self.populate_users()
 
     def __del__(self):
         # body of destructor
@@ -48,8 +50,18 @@ class Schema:
         CREATE TABLE IF NOT EXISTS commanders (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
-            color_id TEXT NOT NULL
+            color_id TEXT
         )
+        ;
+        """
+
+        self.conn.execute(query)
+
+    def populate_users(self):
+        query = """
+        INSERT OR REPLACE INTO users (username, active)
+        VALUES ('michaelh','A'), ('nathanl','A'),
+            ('matts','A'), ('jakel','A')
         ;
         """
 
@@ -73,11 +85,11 @@ class CommandersModel:
 
     def create(self, params):
         query = f'INSERT INTO {self.tablename} ' \
-                f'(name, color_id) ' \
-                f'VALUES ("{params.get("name")}",' \
-                f'"{params.get("color")}")'
-
-        result = self.conn.execute(query)
+                f'(name) ' \
+                f'VALUES (:name)' \
+                # f'"{params.get("color")}")'
+        print("Next up, {}".format(params))
+        result = self.conn.execute(query, {"name": params})
         return self.get_by_id(result.lastrowid)
 
     def delete(self, commander_id):
@@ -147,3 +159,55 @@ class Users:
                 f"WHERE id = {user_id}"
         self.conn.execute(query)
         return self.get_by_id(user_id)
+
+
+class UserDraftingModel:
+    def __init__(self):
+        self.conn = sqlite3.connect('mtg_league.db')
+
+    def __del__(self):
+        self.conn.commit()
+        self.conn.close()
+
+    def get_user_id(self, usn):
+        query = f'SELECT id FROM users ' \
+                f'WHERE username = :usn'
+
+        result = self.conn.execute(query, {"usn": usn}).fetchone()
+        return result
+
+    def check_usercomm(self, uid):
+        query = f'SELECT c.name' \
+                f'FROM user_commander uc' \
+                f'LEFT JOIN commanders c' \
+                f'ON uc.commander_id = c.id' \
+                f'WHERE uc.user_id = :uid' \
+                f'AND uc.commander_id IS NOT NULL'
+
+        result = self.conn.execute(query, {"uid": uid}).fetchone()
+        if result:
+            return result
+        else:
+            return False
+
+    def draft_commander(self, uid):
+        query = """
+        SELECT c.id, c.name
+        FROM commanders c
+        LEFT JOIN user_commander uc
+            ON c.id = uc.commander_id
+        WHERE uc.commander_id IS NULL
+        """
+
+        commanders = self.conn.execute(query).fetchall()
+        if commanders:
+            commander = random.choice(commanders)
+            update_query = """
+                        UPDATE user_commander
+                        SET commander_id = :cid
+                        WHERE user_id = :uid
+                        """
+            self.conn.execute(update_query, {"cid": commander[0], "uid": uid})
+            return commander[1]
+        else:
+            return False
