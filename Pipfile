@@ -10,6 +10,7 @@ gunicorn = "*"
 flask = "*"
 jinja2 = "*"
 requests = "*"
+psycopg2-binary = "*"
 
 [requires]
 python_version = "3.8"
