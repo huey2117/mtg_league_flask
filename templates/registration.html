@@ -7,6 +7,9 @@
 <body>
     {% extends "layout.html" %}
     {% block content %}
+        {% if error %}
+            <p class="error"><strong>Error:</strong> {{ error }}</p>
+        {% endif %}
         <div class="registration">
             <h2>Enter your information below.</h2>
             <form class="user-registration" method="post">

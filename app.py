@@ -5,7 +5,7 @@ from service import CommanderService, DraftingService, UserService
 from pgmodels import Schema
 
 app = Flask(__name__)
-
+app.secret_key = b'\xbdY]3\xba\xed\xdc\xe3\xe1\x1a\xaf\x84 o\x1dps\x8d\xb5|U\x8dW\xf8\x94bD\xce\xd9\x89\xc7\x1c'
 """
 Need to take a second look at this portion
 @app.after_request
@@ -99,6 +99,7 @@ def register():
         fname = request.form['fname']
         email = request.form['email']
         """
+        error = None
         lname = request.form['lname']
         usn = request.form['username']
         sec = request.form['security']
@@ -106,12 +107,16 @@ def register():
         if sec == 'juggernaut2117' and lname in lnames:
             do_ins = UserService().create(usn)
             if do_ins:
-                usn_msg = f'User successfully created! '
+                # usn_msg = f'User successfully created! '
+                flash('User successfully created! ')
+                return redirect(url_for('home'))
             else:
-                usn_msg = f'User creation failed. Contact the admin. '
-            return render_template('registration.html', message=usn_msg)
+                error = f'User creation failed. Contact the admin. '
+            # return render_template('registration.html', message=usn_msg)
         else:
-            return render_template('registration.html', message="Security check failed")
+            error = 'Security check failed'
+
+        return render_template('registration.html', error=error)
     else:
         return render_template('registration.html')
 

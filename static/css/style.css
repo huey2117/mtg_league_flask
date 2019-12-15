@@ -64,6 +64,26 @@ div.draft {
     flex-direction: column;
 }
 
+.flash-messages {
+    margin: 0 auto;
+    align-items: center;
+    width: 1200px;
+}
+
+.flashes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.error {
+    font-size: 18px;
+    margin: 0 0 20px;
+    color: red;
+}
+
 .commander-return {
     font-size: 24px;
     margin: 20px 0;
