@@ -13,7 +13,6 @@ except Exception:
 
 class Schema:
     def __init__(self):
-        print("Schema is __init__")
         if test:
             self.conn = psycopg2.connect(testdb_url)
         else:

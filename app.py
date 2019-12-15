@@ -122,6 +122,5 @@ def register():
 
 
 if __name__ == "__main__":
-    print("Schema should run now")
     Schema()
-    app.run(debug=True)
+    app.run()
