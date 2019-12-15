@@ -1,4 +1,4 @@
-from models import CommandersModel, UserDraftingModel
+from pgmodels import CommandersModel, UserDraftingModel, UsersModel
 
 
 class CommanderService:
@@ -34,3 +34,15 @@ class DraftingService:
             return commander
         else:
             return "No Commanders Available"
+
+class UserService:
+    def __init__(self):
+        self.model = UsersModel()
+
+    def create(self, username):
+        response = self.model.create_user(params)
+        return response
+
+    def update_username(self, params):
+        response = self.model.update_username(params)
+        return response

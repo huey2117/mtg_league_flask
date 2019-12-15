@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register a User</title>
+</head>
+<body>
+    {% extends "layout.html" %}
+    {% block content %}
+        <div class="registration">
+            <h2>Enter your information below.</h2>
+            <form class="user-registration" method="post">
+                <div class="block">
+                    <label for="fname">First Name: </label>
+                    <input type="text" id="fname" name="fname" style="width:175px"/>
+                </div>
+                <div class="block">
+                    <label for="lname">Last Name:* </label>
+                    <input type="text" id="lname" name="lname" style="width:175px" required/>
+                </div>
+                <div class="block">
+                    <label for="email">Email Address: </label>
+                    <input type="text" id="email" name="email" style="width:175px"/>
+                </div>
+                <div class="block">
+                    <label for="username">Username:* </label>
+                    <input type="text" id="username" name="username" style="width:175px" required/>
+                </div>
+                <div class="block">
+                    <label for="security">Michael's MtG User?* </label>
+                    <input type="text" id="security" name="security" style="width:175px" required/>
+                </div>
+            </form>
+        </div>
+    {% endblock %}
+</body>
+</html>

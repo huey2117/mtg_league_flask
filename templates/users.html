@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home of the Fluffy Bunny League</title>
+</head>
+<body>
+    {% extends "layout.html" %}
+    {% block content %}
+        <div class="users">
+            <h2>Enter your information below.</h2>
+            <form class="user-form" action="/users" method="post">
+                <div class="input-uid">
+                    <label for="user-id"> Enter your current user ID: </label>
+                    <input type="text" name="user-id" id="user-id" style="width:175px" required/>
+                </div>
+                <div class="input-security">
+                    <label for="security"> Michael's MtG username? </label>
+                    <input type="text" name="security" id="security" style="width:175px" required/>
+                </div>
+                <div class="input-username">
+                    <label for="username"> Enter your new username: </label>
+                    <input type="text" name="username" id="username" style="width:175px" required/>
+                </div>
+                <div class="users-submit">
+                    <input type="submit" />
+                </div>
+            </form>
+            <div class="user-return">
+                <strong>
+                    {{ message }}
+                </strong>
+            </div>
+        </div>
+    {% endblock %}
+</body>
+</html>
