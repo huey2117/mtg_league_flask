@@ -69,6 +69,18 @@ div.draft {
     margin: 20px 0;
 }
 
+.user-return {
+    font-size: 18px;
+    margin: 10px 0;
+    color: red;
+}
+
+.reg-return {
+    font-size: 18px;
+    margin: 10px 0;
+    color: red;
+}
+
 h2 {
   font-size: 18px;
   letter-spacing: -1px;
@@ -145,12 +157,6 @@ label {
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
 }
-
-.input-uid {}
-
-.input-security {}
-
-.input-username {}
 
 footer {
   background-color: #323f43;

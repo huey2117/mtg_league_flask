@@ -149,8 +149,8 @@ class UsersModel:
         self.conn.close()
         self.cur.close()
 
-    def get_by_id(self, _id):
-        where_clause = f'AND id = {_id}'
+    def get_by_id(self, id):
+        where_clause = f'AND id = {id}'
         return self.select(where_clause)
 
     def select(self, where_clause=""):
@@ -167,8 +167,15 @@ class UsersModel:
                 f'VALUES (%s)'
 
         params = (username,)
-        result = self.cur.execute(query, params)
-        return self.get_by_id(result.lastrowid)
+        self.cur.execute(query, params)
+
+        get_id = f'SELECT max(id) FROM {self.tablename} ' \
+                f'WHERE username = %s'
+
+        gid_params = (username,)
+        id_result = self.cur.execute(get_id, gid_params)
+        id = self.cur.fetchone()
+        return self.get_by_id(id[0])
 
     def update_username(self, params):
         query = f"UPDATE {self.tablename} " \

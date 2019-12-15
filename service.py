@@ -40,7 +40,7 @@ class UserService:
         self.model = UsersModel()
 
     def create(self, username):
-        response = self.model.create_user(params)
+        response = self.model.create_user(username)
         return response
 
     def update_username(self, params):
