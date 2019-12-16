@@ -86,11 +86,14 @@ def users():
         if sec == 'juggernaut2117':
             params = (usn, int(uid))
             do_update = UserService().update_username(params)
-            if do_update:
+            if do_update == 'invalid':
+                error = 'User ID incorrect or invalid, please contact admin. '
+                return render_template('users.html', error=error)
+            elif do_update:
                 flash(f'Username successfully updated to {usn}')
                 return redirect(url_for('home'))
             else:
-                error = "Username does not exist or an error occurred while updating, please contact the admin. "
+                error = "An error occurred while updating, please contact the admin. "
             return render_template('users.html', error=error)
         else:
             error = "Security check failed. "

@@ -158,7 +158,10 @@ class UsersModel:
 
         self.cur.execute(query)
         user = self.cur.fetchall()
-        return user[0]
+        if user:
+            return user[0]
+        else:
+            return user
 
     def create_user(self, username):
         where_clause = f'AND username = "{username}" '
@@ -184,6 +187,10 @@ class UsersModel:
         return self.get_by_id(uid[0])
 
     def update_username(self, params):
+        exists_check = self.get_by_id(params[1])
+        if not exists_check:
+            return 'invalid'
+
         query = f"UPDATE {self.tablename} " \
                 f"SET username = %s " \
                 f"WHERE id = %s"
