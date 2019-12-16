@@ -77,7 +77,7 @@ def create_commanders():
 def users():
     if request.method == 'POST':
         uid = request.form['user-id']
-        sec = request.form['security']
+        sec = request.form['security'].lower()
         usn = request.form['username']
         if len(usn) > 30:
             error = 'Username must be less than 30 characters. '
@@ -103,19 +103,19 @@ def users():
 
 @app.route("/register", methods=["GET","POST"])
 def register():
-    lnames = ['Huey','Lovin','Strzegowski']
+    lnames = ['huey','lovin','strzegowski']
     if request.method == 'POST':
         """
         Not currently in use for this iteration
         fname = request.form['fname']
         email = request.form['email']
         """
-        lname = request.form['lname']
+        lname = request.form['lname'].lower()
         usn = request.form['username']
         if len(usn) > 30:
             error = 'Username must be less than 30 characters. '
             return render_template('registration.html', error=error)
-        sec = request.form['security']
+        sec = request.form['security'].lower()
 
         if sec == 'juggernaut2117' and lname in lnames:
             do_ins = UserService().create(usn)
