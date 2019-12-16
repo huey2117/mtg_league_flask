@@ -164,7 +164,7 @@ class UsersModel:
             return user
 
     def create_user(self, username):
-        where_clause = f'AND username = "{username}" '
+        where_clause = f"AND username = '{username}' "
         usn_duplicate_check = self.select(where_clause)
         if usn_duplicate_check:
             return 'exists'
