@@ -7,20 +7,23 @@
 <body>
     {% extends "layout.html" %}
     {% block content %}
+        {% if error %}
+            <p class="error"><strong>Error:</strong> {{ error }}</p>
+        {% endif %}
         <div class="users">
             <h2>Enter your information below.</h2>
             <form class="user-form" action="/users" method="post">
                 <div class="input-uid">
                     <label for="user-id"> Enter your current user ID: </label>
-                    <input type="text" name="user-id" id="user-id" style="width:175px" required/>
+                    <input type="text" name="user-id" id="user-id" maxlength="30" style="width:175px" required/>
                 </div>
                 <div class="input-security">
                     <label for="security"> Michael's MtG username? </label>
-                    <input type="text" name="security" id="security" style="width:175px" required/>
+                    <input type="text" name="security" id="security" maxlength="30" style="width:175px" required/>
                 </div>
                 <div class="input-username">
                     <label for="username"> Enter your new username: </label>
-                    <input type="text" name="username" id="username" style="width:175px" required/>
+                    <input type="text" name="username" id="username" maxlength="30" style="width:175px" required/>
                 </div>
                 <div class="users-submit">
                     <input type="submit" />

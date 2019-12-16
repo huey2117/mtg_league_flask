@@ -39,6 +39,9 @@ def draft():
     if request.method == 'POST':
         username = request.form['username']
         user_id = DraftingService().userid(username)
+        if not user_id:
+            error = 'Username does not exist. Please register or contact admin. '
+            return render_template('draft.html', error=error)
         comm_check = DraftingService().usercomm(user_id)
         if comm_check:
             commander = comm_check
@@ -76,6 +79,9 @@ def users():
         uid = request.form['user-id']
         sec = request.form['security']
         usn = request.form['username']
+        if len(usn) > 30:
+            error = 'Username must be less than 30 characters. '
+            return render_template('users.html', error=error)
 
         if sec == 'juggernaut2117':
             params = (usn, int(uid))
@@ -84,7 +90,7 @@ def users():
                 flash(f'Username successfully updated to {usn}')
                 return redirect(url_for('home'))
             else:
-                error = "Unable to update username at this time, please contact the admin. "
+                error = "Username does not exist or an error occurred while updating, please contact the admin. "
             return render_template('users.html', error=error)
         else:
             error = "Security check failed. "
@@ -103,15 +109,21 @@ def register():
         """
         lname = request.form['lname']
         usn = request.form['username']
+        if len(usn) > 30:
+            error = 'Username must be less than 30 characters. '
+            return render_template('registration.html', error=error)
         sec = request.form['security']
 
         if sec == 'juggernaut2117' and lname in lnames:
             do_ins = UserService().create(usn)
-            if do_ins:
-                flash('User successfully created! ')
+            if do_ins == 'exists':
+                flash('User already exists! ')
+                return redirect(url_for('home'))
+            elif do_ins:
+                flash(f'User "{usn}" successfully created! ')
                 return redirect(url_for('home'))
             else:
-                error = f'User creation failed. Contact the admin. '
+                error = 'User creation failed. Contact the admin. '
         else:
             error = 'Security check failed'
 

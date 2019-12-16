@@ -7,11 +7,14 @@
 <body>
     {% extends "layout.html" %}
     {% block content %}
+        {% if error %}
+            <p class="error"><strong>Error:</strong> {{ error }}</p>
+        {% endif %}
         <div class="draft">
             <h1>Drafting Tool</h1>
             <a class="draft-instructions">Enter your username below.</a>
             <form action="/draft" method="post">
-                <input type="text" name="username" />
+                <input type="text" name="username" maxlength="30" required />
                 <input type="submit" />
             </form>
             <div class="commander-return">

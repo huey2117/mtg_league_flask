@@ -161,9 +161,16 @@ class UsersModel:
         return user[0]
 
     def create_user(self, username):
+        where_clause = f'AND username = "{username}" '
+        usn_duplicate_check = self.select(where_clause)
+        if usn_duplicate_check:
+            return 'exists'
+
         query = f'INSERT INTO {self.tablename} ' \
                 f'(username) ' \
-                f'VALUES (%s)'
+                f'VALUES (%s) ' \
+                f'ON CONFLICT (username) ' \
+                f'DO NOTHING'
 
         params = (username,)
         self.cur.execute(query, params)
@@ -172,9 +179,9 @@ class UsersModel:
                 f'WHERE username = %s'
 
         gid_params = (username,)
-        id_result = self.cur.execute(get_id, gid_params)
-        id = self.cur.fetchone()
-        return self.get_by_id(id[0])
+        self.cur.execute(get_id, gid_params)
+        uid = self.cur.fetchone()
+        return self.get_by_id(uid[0])
 
     def update_username(self, params):
         query = f"UPDATE {self.tablename} " \
@@ -204,7 +211,10 @@ class UserDraftingModel:
         params = (usn,)
         self.cur.execute(query, params)
         result = self.cur.fetchone()
-        return result[0]
+        if result:
+            return result[0]
+        else:
+            return result
 
     def check_usercomm(self, uid):
         query = f'SELECT c.name ' \
