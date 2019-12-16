@@ -171,9 +171,7 @@ class UsersModel:
 
         query = f'INSERT INTO {self.tablename} ' \
                 f'(username) ' \
-                f'VALUES (%s) ' \
-                f'ON CONFLICT (username) ' \
-                f'DO NOTHING'
+                f'VALUES (%s) '
 
         params = (username,)
         self.cur.execute(query, params)
