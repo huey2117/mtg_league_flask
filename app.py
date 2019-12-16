@@ -81,12 +81,14 @@ def users():
             params = (usn, int(uid))
             do_update = UserService().update_username(params)
             if do_update:
-                new_usn_msg = f'Username successfully updated to {usn}'
+                flash(f'Username successfully updated to {usn}')
+                return redirect(url_for('home'))
             else:
-                new_usn_msg = "Unable to update username at this time, please contact the admin. "
-            return render_template('users.html', message=new_usn_msg)
+                error = "Unable to update username at this time, please contact the admin. "
+            return render_template('users.html', error=error)
         else:
-            return render_template('users.html', message="Security check failed")
+            error = "Security check failed. "
+            return render_template('users.html', error=error)
     else:
         return render_template('users.html')
 
@@ -99,7 +101,6 @@ def register():
         fname = request.form['fname']
         email = request.form['email']
         """
-        error = None
         lname = request.form['lname']
         usn = request.form['username']
         sec = request.form['security']
@@ -107,12 +108,10 @@ def register():
         if sec == 'juggernaut2117' and lname in lnames:
             do_ins = UserService().create(usn)
             if do_ins:
-                # usn_msg = f'User successfully created! '
                 flash('User successfully created! ')
                 return redirect(url_for('home'))
             else:
                 error = f'User creation failed. Contact the admin. '
-            # return render_template('registration.html', message=usn_msg)
         else:
             error = 'Security check failed'
 
