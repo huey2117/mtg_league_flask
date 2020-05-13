@@ -1,14 +1,47 @@
 import os
 import psycopg2
 import random
+from database import Base
+from flask_security import UserMixin, RoleMixin
+from sqlalchemy import create_engine
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Boolean, DateTime, Column, Integer, String, ForeignKey
+
+test = True
+
+db_url = os.environ['DATABASE_URL']
+testdb_url = 'dbname=d8dndq07tlbq07 host=localhost port=5432 user=dbtest password=devdbtest'
 
 
-try:
-    db_url = os.environ['DATABASE_URL']
-    test = False
-except Exception:
-    testdb_url = 'dbname=d8dndq07tlbq07 host=localhost port=5432 user=dbtest password=devdbtest'
-    test = True
+class RolesUsers(Base):
+    __tablename__ = 'roles_users'
+    id = Column(Integer(), primary_key=True)
+    user_id = Column('user_id', Integer(), ForeignKey('users.id'))
+    role_id = Column('role_id', Integer(), ForeignKey('roles.id'))
+
+
+class Roles(Base, RoleMixin):
+    __tablename__ = 'roles'
+    id = Column(Integer(), primary_key=True)
+    name = Column(String(80), unique=True)
+    description = Column(String(255))
+
+
+class User(Base, UserMixin):
+    __tablename__ = 'users'
+    id = Column(Integer(), primary_key=True)
+    email = Column(String(255), unique=True)
+    username = Column(String(255))
+    password = Column(String(255))
+    last_login_at = Column(DateTime())
+    current_login_at = Column(DateTime())
+    last_login_ip = Column(String(100))
+    current_login_ip = Column(String(100))
+    login_count = Column(Integer())
+    active = Column(Boolean())
+    confirmed_at = Column(DateTime())
+    roles = relationship('Roles', secondary='roles_users',
+                         backref=backref('users', lazy='dynamic'))
 
 
 class Schema:
@@ -18,7 +51,7 @@ class Schema:
         else:
             self.conn = psycopg2.connect(db_url, sslmode='require')
         self.cur = self.conn.cursor()
-        self.create_users_table()
+        # self.create_users_table()
         self.create_commanders_table()
         self.create_user_commander_table()
 
@@ -27,6 +60,7 @@ class Schema:
         self.conn.commit()
         self.conn.close()
         self.cur.close()
+
 
     def create_user_commander_table(self):
         query = """

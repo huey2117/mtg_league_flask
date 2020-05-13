@@ -1,11 +1,34 @@
+import os
 import json
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
 from service import CommanderService, DraftingService, UserService
-# from models import Schema
-from pgmodels import Schema
+from pgmodels import Schema, User, Roles
+from flask_security import Security, SQLAlchemySessionUserDatastore, login_required
+from database import db_session, init_db
+
 
 app = Flask(__name__)
-app.secret_key = b'\xbdY]3\xba\xed\xdc\xe3\xe1\x1a\xaf\x84 o\x1dps\x8d\xb5|U\x8dW\xf8\x94bD\xce\xd9\x89\xc7\x1c'
+app.config['SECRET_KEY'] = b'\xbdY]3\xba\xed\xdc\xe3\xe1\x1a\xaf\x84 o\x1dps\x8d\xb5|U\x8dW\xf8\x94bD\xce\xd9\x89\xc7\x1c'
+app.config['DEBUG'] = True
+if app.config['DEBUG']:
+    postgres = {
+        'user': 'dbtest',
+        'password': 'devdbtest',
+        'host': 'localhost',
+        'port': '5432',
+        'dbname': 'd8dndq07tlbq07'
+    }
+    db_url = f"postgresql://{postgres['user']}:{postgres['password']}@" \
+        f"{postgres['host']}:{postgres['port']}/{postgres['dbname']}"
+else:
+    db_url = os.environ['DATABASE_URL']
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SECURITY_PASSWORD_SALT'] = os.urandom(156)
+# app.secret_key = b'\xbdY]3\xba\xed\xdc\xe3\xe1\x1a\xaf\x84 o\x1dps\x8d\xb5|U\x8dW\xf8\x94bD\xce\xd9\x89\xc7\x1c'
+
+
+
 """
 Need to take a second look at this portion
 @app.after_request
@@ -16,25 +39,41 @@ def add_headers(response):
     response.headers['Access-Control-Allow-Methods'] = "POST, GET, PUT, DELETE, OPTIONS"
 """
 
+user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
+
+security = Security(app, user_datastore)
+
+"""
+@app.before_first_request
+def create_user():
+    init_db()
+    # REMEMBER TO DELETE THESE USERS
+    user_datastore.create_user(email='natelovin@gmail.com', password='testingflasksec')
+    db_session.commit()
+"""
 
 @app.route("/")
+@login_required
 def index():
     # need to add this unless it will be handled by Vue/React
     return render_template("home.html")
 
 
 @app.route("/home")
+@login_required
 def home():
     # need to add this unless it will be handled by Vue/React
     return render_template("home.html")
 
 
 @app.route("/about", methods=["GET"])
+@login_required
 def about():
     return render_template('about.html')
 
 
 @app.route("/draft", methods=["GET", "POST"])
+@login_required
 def draft():
     if request.method == 'POST':
         username = request.form['username']
@@ -55,11 +94,13 @@ def draft():
 
 
 @app.route("/commanders", methods=["GET"])
+@login_required
 def commanders():
     return render_template('commanders.html')
 
 
 @app.route("/commanders/create", methods=["GET","POST"])
+@login_required
 def create_commanders():
     if request.method == 'POST':
         comm_str = request.form.get("commlist").strip()
@@ -74,6 +115,7 @@ def create_commanders():
 
 
 @app.route("/users", methods=["GET","POST"])
+@login_required
 def users():
     if request.method == 'POST':
         uid = request.form['user-id']
@@ -102,6 +144,7 @@ def users():
         return render_template('users.html')
 
 @app.route("/register", methods=["GET","POST"])
+@login_required
 def register():
     lnames = ['huey','lovin','strzegowski']
     if request.method == 'POST':
