@@ -13,16 +13,11 @@ if test:
         'port': '5432',
         'dbname': 'd8dndq07tlbq07'
     }
+
+    db_url = f"postgresql://{postgres['user']}:{postgres['password']}@" \
+        f"{postgres['host']}:{postgres['port']}/{postgres['dbname']}"
 else:
     db_url = os.environ['DATABASE_URL']
-    db_list = db_url.split(' ')
-    postgres = {}
-    for c in db_list:
-        c = c.split('=')
-        postgres[c[0]] = c[1]
-
-db_url = f"postgresql://{postgres['user']}:{postgres['password']}@" \
-    f"{postgres['host']}:{postgres['port']}/{postgres['dbname']}"
 
 engine = create_engine(db_url, convert_unicode=True)
 db_session = scoped_session(sessionmaker(autocommit=False,

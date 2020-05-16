@@ -4,11 +4,18 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, f
 from service import CommanderService, DraftingService, UserService
 from pgmodels import Schema, User, Roles
 from flask_security import Security, SQLAlchemySessionUserDatastore, login_required
+from flask_security.forms import RegisterForm, Required, StringField
 from database import db_session, init_db
+from flask_mail import Mail, Message
+
+
+class ExtendedRegisterForm(RegisterForm):
+    first_name = StringField('First Name', Required())
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = b'\xbdY]3\xba\xed\xdc\xe3\xe1\x1a\xaf\x84 o\x1dps\x8d\xb5|U\x8dW\xf8\x94bD\xce\xd9\x89\xc7\x1c'
+# app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['DEBUG'] = True
 if app.config['DEBUG']:
     postgres = {
@@ -22,40 +29,75 @@ if app.config['DEBUG']:
         f"{postgres['host']}:{postgres['port']}/{postgres['dbname']}"
 else:
     db_url = os.environ['DATABASE_URL']
-
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SECURITY_PASSWORD_SALT'] = os.urandom(156)
-# app.secret_key = b'\xbdY]3\xba\xed\xdc\xe3\xe1\x1a\xaf\x84 o\x1dps\x8d\xb5|U\x8dW\xf8\x94bD\xce\xd9\x89\xc7\x1c'
-
-
-
-"""
-Need to take a second look at this portion
-@app.after_request
-def add_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Headers'] = "Content-Type, Access-Control-Allow-Headers," \
-                                                       "Authorization, X-Requested-Width"
-    response.headers['Access-Control-Allow-Methods'] = "POST, GET, PUT, DELETE, OPTIONS"
-"""
+app.config['SECURITY_CONFIRMABLE'] = True
+app.config['SECURITY_TRACKABLE'] = True
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'noreply.fluffybunny@gmail.com'
+app.config['MAIL_PASSWORD'] = 'nhjulbhjilfmdiyf'
+# app.config['MAIL_PASSWORD'] = os.environ['MAIL_PASSWORD']
+app.config['MAIL_DEFAULT_SENDER'] = ('Fluffy Bunny Admins', 'noreply.fluffybunny@gmail.com')
+app.config['MAIL_MAX_EMAILS'] = 5
+app.config['MAIL_SUPPRESS_SEND'] = False
+app.config['MAIL_ASCII_ATTACHMENTS'] = False
 
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
-
-security = Security(app, user_datastore)
+security = Security(app, user_datastore, register_form=ExtendedRegisterForm)
+mail = Mail(app)
 
 """
 @app.before_first_request
 def create_user():
     init_db()
     # REMEMBER TO DELETE THESE USERS
-    user_datastore.create_user(email='natelovin@gmail.com', password='testingflasksec')
+    user_datastore.create_user(email='michaelyeuh@gmail.com', password='testingflasksec')
     db_session.commit()
 """
 
 @app.route("/")
 @login_required
 def index():
-    # need to add this unless it will be handled by Vue/React
+    """ MAIL INSTALL SUCCESSFUL
+    Adding a simple email message here to test Mail install
+    msg = Message('Testing This Shite', recipients=['natelovin@gmail.com','michaelyeuh@gmail.com'])
+    msg.body = 'This is a test email motha fucka.'
+        OR
+    msg.html = 'some html'
+    mail.send(msg)
+
+    Sending multiple emails in one connection, limited by MAX config above
+    users = [{'name': 'Name1', 'email': 'email@'},{'name': 'Name2', 'email': 'email2@'}]
+    with mail.connect() as conn:
+        for user in users:
+            msg = Message('Message Subject', recipients=[user['email']])
+            msg.html = 'whatever html'
+            conn.send(msg)
+
+    Adding an attachment (assuming cat.jpg is in project folder)
+    with app.open_resource('cat.jpg') as cat:
+        msg.attach('cat.jpg', 'image/jpeg', cat.read())
+
+    Options:
+    msg = Message(
+        subject = '',
+        recipients = [],
+        body = '',
+        html = '',
+        sender = '',
+        cc = [],
+        bcc = [],
+        attachments = [],
+        reply_to = [],
+        date = 'date',
+        charset = '',
+        extra_headers = {},
+        mail_options = [],
+        rcpt_options = []
+    """
     return render_template("home.html")
 
 
@@ -101,6 +143,7 @@ def commanders():
 
 @app.route("/commanders/create", methods=["GET","POST"])
 @login_required
+# @roles_required('admin', 'commissioner')
 def create_commanders():
     if request.method == 'POST':
         comm_str = request.form.get("commlist").strip()
@@ -117,6 +160,10 @@ def create_commanders():
 @app.route("/users", methods=["GET","POST"])
 @login_required
 def users():
+    """
+    This was the janky handling of security pre-flask-sec. Remove
+    functionality once registration is live.
+    """
     if request.method == 'POST':
         uid = request.form['user-id']
         sec = request.form['security'].lower()
@@ -177,6 +224,10 @@ def register():
     else:
         return render_template('registration.html')
 
+
+@app.route("/resetpw", methods=["GET","POST"])
+def reset_password():
+    return render_template('security/reset_password.html')
 
 if __name__ == "__main__":
     Schema()

@@ -15,13 +15,15 @@ testdb_url = 'dbname=d8dndq07tlbq07 host=localhost port=5432 user=dbtest passwor
 
 class RolesUsers(Base):
     __tablename__ = 'roles_users'
+    __table_args__ = ({"schema": "admin"})
     id = Column(Integer(), primary_key=True)
-    user_id = Column('user_id', Integer(), ForeignKey('users.id'))
-    role_id = Column('role_id', Integer(), ForeignKey('roles.id'))
+    user_id = Column('user_id', Integer(), ForeignKey('admin.users.id'))
+    role_id = Column('role_id', Integer(), ForeignKey('admin.roles.id'))
 
 
 class Roles(Base, RoleMixin):
     __tablename__ = 'roles'
+    __table_args__ = ({"schema": "admin"})
     id = Column(Integer(), primary_key=True)
     name = Column(String(80), unique=True)
     description = Column(String(255))
@@ -29,8 +31,10 @@ class Roles(Base, RoleMixin):
 
 class User(Base, UserMixin):
     __tablename__ = 'users'
+    __table_args__ = ({"schema": "admin"})
     id = Column(Integer(), primary_key=True)
     email = Column(String(255), unique=True)
+    first_name = Column(String(255))
     username = Column(String(255))
     password = Column(String(255))
     last_login_at = Column(DateTime())
@@ -40,8 +44,8 @@ class User(Base, UserMixin):
     login_count = Column(Integer())
     active = Column(Boolean())
     confirmed_at = Column(DateTime())
-    roles = relationship('Roles', secondary='roles_users',
-                         backref=backref('users', lazy='dynamic'))
+    roles = relationship('Roles', secondary='admin.roles_users',
+                         backref=backref('admin.users', lazy='dynamic'))
 
 
 class Schema:
