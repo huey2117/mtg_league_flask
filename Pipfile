@@ -11,6 +11,9 @@ flask = "*"
 jinja2 = "*"
 requests = "*"
 psycopg2-binary = "*"
+flask-security = "*"
+flask-sqlalchemy = "*"
+sqlalchemy = "*"
 
 [requires]
 python_version = "3.8"
