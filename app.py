@@ -2,11 +2,13 @@ import os
 import json
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
 from service import CommanderService, DraftingService, UserService
-from pgmodels import Schema, User, Roles
-from flask_security import Security, SQLAlchemySessionUserDatastore, login_required
-from flask_security.forms import RegisterForm, Required, StringField
+from pgmodels import User, Roles, UserAdmin, RoleAdmin
+from flask_security import Security, SQLAlchemySessionUserDatastore, login_required, utils, \
+    current_user, login_user
+from flask_security.forms import RegisterForm, Required, StringField, PasswordField, LoginForm
 from database import db_session, init_db
 from flask_mail import Mail, Message
+from flask_admin import Admin
 
 
 class ExtendedRegisterForm(RegisterForm):
@@ -35,6 +37,7 @@ else:
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SECURITY_PASSWORD_SALT'] = os.urandom(156)
 app.config['SECURITY_CONFIRMABLE'] = True
+app.config['SECURITY_REGISTERABLE'] = True
 app.config['SECURITY_TRACKABLE'] = True
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
@@ -47,68 +50,75 @@ app.config['MAIL_DEFAULT_SENDER'] = ('Fluffy Bunny Admins', 'noreply.fluffybunny
 app.config['MAIL_MAX_EMAILS'] = 5
 app.config['MAIL_SUPPRESS_SEND'] = False
 app.config['MAIL_ASCII_ATTACHMENTS'] = False
+app.config['FLASK_ADMIN_SWATCH'] = 'sandstone'
+app.config['SECURITY_POST_LOGIN_VIEW'] = '/about'
+app.config['SECURITY_POST_LOGOUT_VIEW'] = '/home'
+app.config['SECURITY_POST_REGISTER_VIEW'] = '/about'
 
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
 security = Security(app, user_datastore, register_form=ExtendedRegisterForm)
 mail = Mail(app)
 
-"""
+
 @app.before_first_request
-def create_user():
+def before_first_request():
     init_db()
-    # REMEMBER TO DELETE THESE USERS
-    user_datastore.create_user(email='michaelyeuh@gmail.com', password='testingflasksec')
+    user_datastore.find_or_create_role(name='admin', description='Administrator')
+    user_datastore.find_or_create_role(name='commissioner', description='League Commissioner')
+    user_datastore.find_or_create_role(name='player', description='League Participant')
+    user_datastore.find_or_create_role(name='scorekeeper', description='Designated Scorekeeper')
+
+    # Testing Users and Roles
+    encrypted_password = utils.hash_password('testingflasksec')
+    if not user_datastore.get_user('michaelyeuh@gmail.com'):
+        user_datastore.create_user(email='michaelyeuh@gmail.com', password=encrypted_password)
+    if not user_datastore.get_user('natelovin@gmail.com'):
+        user_datastore.create_user(email='natelovin@gmail.com', password=encrypted_password)
+    if not user_datastore.get_user('scorekeeper@fakemail.com'):
+        user_datastore.create_user(email='scorekeeper@fakemail.com', password=encrypted_password)
+    if not user_datastore.get_user('user@fbc.org'):
+        user_datastore.create_user(email='user@fbc.org', password=encrypted_password)
     db_session.commit()
-"""
+
+    user_datastore.add_role_to_user('michaelyeuh@gmail.com', 'admin')
+    user_datastore.add_role_to_user('natelovin@gmail.com', 'commissioner')
+    user_datastore.add_role_to_user('scorekeeper@fakemail.com', 'scorekeeper')
+    user_datastore.add_role_to_user('user@fbc.org', 'player')
+    db_session.commit()
+
+
+# Initialize Flask-Admin
+admin = Admin(app)
+
+# Add Flask-Admin views for Users and Roles
+admin.add_view(UserAdmin(User, db_session))
+admin.add_view(RoleAdmin(Roles, db_session))
+
 
 @app.route("/")
-@login_required
 def index():
-    """ MAIL INSTALL SUCCESSFUL
-    Adding a simple email message here to test Mail install
-    msg = Message('Testing This Shite', recipients=['natelovin@gmail.com','michaelyeuh@gmail.com'])
-    msg.body = 'This is a test email motha fucka.'
-        OR
-    msg.html = 'some html'
-    mail.send(msg)
-
-    Sending multiple emails in one connection, limited by MAX config above
-    users = [{'name': 'Name1', 'email': 'email@'},{'name': 'Name2', 'email': 'email2@'}]
-    with mail.connect() as conn:
-        for user in users:
-            msg = Message('Message Subject', recipients=[user['email']])
-            msg.html = 'whatever html'
-            conn.send(msg)
-
-    Adding an attachment (assuming cat.jpg is in project folder)
-    with app.open_resource('cat.jpg') as cat:
-        msg.attach('cat.jpg', 'image/jpeg', cat.read())
-
-    Options:
-    msg = Message(
-        subject = '',
-        recipients = [],
-        body = '',
-        html = '',
-        sender = '',
-        cc = [],
-        bcc = [],
-        attachments = [],
-        reply_to = [],
-        date = 'date',
-        charset = '',
-        extra_headers = {},
-        mail_options = [],
-        rcpt_options = []
-    """
     return render_template("home.html")
 
 
 @app.route("/home")
-@login_required
 def home():
     # need to add this unless it will be handled by Vue/React
     return render_template("home.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('about'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        login_user(user, remember=form.remember.data)
+        return redirect(url_for('about'))
+    return render_template('security/login_user.html', title='Sign In', form=form)
 
 
 @app.route("/about", methods=["GET"])
@@ -225,7 +235,7 @@ def register():
 
         return render_template('registration.html', error=error)
     else:
-        return render_template('registration.html')
+        return render_template('security/register_user.html')
 
 
 @app.route("/resetpw", methods=["GET","POST"])
@@ -233,5 +243,4 @@ def reset_password():
     return render_template('security/reset_password.html')
 
 if __name__ == "__main__":
-    Schema()
     app.run()

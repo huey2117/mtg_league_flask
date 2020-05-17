@@ -44,6 +44,18 @@ div.home {
           border-radius: 6px; */
 }
 
+div.registration {
+  padding: 10px 10px 30px 10px;
+  background-color: #E6E6FA;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 50px;
+  /* -webkit-border-radius: 6px;
+     -moz-border-radius: 6px;
+          border-radius: 6px; */
+}
+
 div.home .welcome-text {
     display: flex;
     text-align: center;
@@ -53,13 +65,21 @@ div.home .welcome-text {
 div.about {
   padding: 10px 0 30px 0;
   background-color: #E6E6FA;
-  /* -webkit-border-radius: 6px;
-     -moz-border-radius: 6px;
-          border-radius: 6px; */
+  border-radius: 50px;
 }
 
 div.draft {
     align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
+#register_user_form {
+    display: flex;
+    flex-direction: column;
+}
+
+#login_user_form {
     display: flex;
     flex-direction: column;
 }
