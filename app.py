@@ -17,7 +17,7 @@ class ExtendedRegisterForm(RegisterForm):
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
-app.config['DEBUG'] = True
+# app.config['DEBUG'] = True
 """
 On next restart of PC, env var for db_url and mail_password should be set.
 Can clean this up then. Also clean up in database.py.

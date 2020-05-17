@@ -10,7 +10,7 @@ from sqlalchemy import Boolean, DateTime, Column, Integer, String, ForeignKey
 from flask_admin.contrib import sqla
 from flask import redirect, url_for
 
-test = True
+#test = True
 
 db_url = os.environ['DATABASE_URL']
 testdb_url = 'dbname=d8dndq07tlbq07 host=localhost port=5432 user=dbtest password=devdbtest'
