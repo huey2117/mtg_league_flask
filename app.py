@@ -67,6 +67,7 @@ def before_first_request():
     user_datastore.find_or_create_role(name='commissioner', description='League Commissioner')
     user_datastore.find_or_create_role(name='player', description='League Participant')
     user_datastore.find_or_create_role(name='scorekeeper', description='Designated Scorekeeper')
+    db_session.commit()
 
     # Testing Users and Roles
     # encrypted_password = utils.hash_password('testingflasksec')
