@@ -69,22 +69,22 @@ def before_first_request():
     user_datastore.find_or_create_role(name='scorekeeper', description='Designated Scorekeeper')
 
     # Testing Users and Roles
-    encrypted_password = utils.hash_password('testingflasksec')
-    if not user_datastore.get_user('michaelyeuh@gmail.com'):
-        user_datastore.create_user(email='michaelyeuh@gmail.com', password=encrypted_password)
-    if not user_datastore.get_user('natelovin@gmail.com'):
-        user_datastore.create_user(email='natelovin@gmail.com', password=encrypted_password)
-    if not user_datastore.get_user('scorekeeper@fakemail.com'):
-        user_datastore.create_user(email='scorekeeper@fakemail.com', password=encrypted_password)
-    if not user_datastore.get_user('user@fbc.org'):
-        user_datastore.create_user(email='user@fbc.org', password=encrypted_password)
-    db_session.commit()
-
-    user_datastore.add_role_to_user('michaelyeuh@gmail.com', 'admin')
-    user_datastore.add_role_to_user('natelovin@gmail.com', 'commissioner')
-    user_datastore.add_role_to_user('scorekeeper@fakemail.com', 'scorekeeper')
-    user_datastore.add_role_to_user('user@fbc.org', 'player')
-    db_session.commit()
+    # encrypted_password = utils.hash_password('testingflasksec')
+    # if not user_datastore.get_user('michaelyeuh@gmail.com'):
+    #     user_datastore.create_user(email='michaelyeuh@gmail.com', password=encrypted_password)
+    # if not user_datastore.get_user('natelovin@gmail.com'):
+    #     user_datastore.create_user(email='natelovin@gmail.com', password=encrypted_password)
+    # if not user_datastore.get_user('scorekeeper@fakemail.com'):
+    #     user_datastore.create_user(email='scorekeeper@fakemail.com', password=encrypted_password)
+    # if not user_datastore.get_user('user@fbc.org'):
+    #     user_datastore.create_user(email='user@fbc.org', password=encrypted_password)
+    # db_session.commit()
+    #
+    # user_datastore.add_role_to_user('michaelyeuh@gmail.com', 'admin')
+    # user_datastore.add_role_to_user('natelovin@gmail.com', 'commissioner')
+    # user_datastore.add_role_to_user('scorekeeper@fakemail.com', 'scorekeeper')
+    # user_datastore.add_role_to_user('user@fbc.org', 'player')
+    # db_session.commit()
 
 
 # Initialize Flask-Admin
