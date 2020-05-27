@@ -184,8 +184,8 @@ def users():
         return render_template('users.html')
 
 
-@app.route("/log_game", methods=["GET","POST"])
-@roles_accepted('admin','commissioner','scorekeeper')
+@app.route("/log_game", methods=["GET", "POST"])
+@roles_accepted('admin', 'commissioner', 'scorekeeper')
 def log_game():
     if request.method == 'POST':
         # add scores logic
