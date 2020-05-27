@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, f
 from service import CommanderService, DraftingService, UserService
 from pgmodels import User, Roles, UserAdmin, RoleAdmin
 from flask_security import Security, SQLAlchemySessionUserDatastore, login_required, utils, \
-    current_user, login_user
+    current_user, roles_required, roles_accepted
 from flask_security.forms import RegisterForm, Required, StringField, PasswordField, LoginForm
 from database import db_session, init_db
 from flask_mail import Mail, Message
@@ -17,25 +17,12 @@ class ExtendedRegisterForm(RegisterForm):
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
-# app.config['DEBUG'] = True
 """
-On next restart of PC, env var for db_url and mail_password should be set.
-Can clean this up then. Also clean up in database.py.
+If DEBUG = True, set Test = True in pgmodel and database
 """
-if app.config['DEBUG']:
-    postgres = {
-        'user': 'dbtest',
-        'password': 'devdbtest',
-        'host': 'localhost',
-        'port': '5432',
-        'dbname': 'd8dndq07tlbq07'
-    }
-    db_url = f"postgresql://{postgres['user']}:{postgres['password']}@" \
-        f"{postgres['host']}:{postgres['port']}/{postgres['dbname']}"
-else:
-    db_url = os.environ['DATABASE_URL']
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-app.config['SECURITY_PASSWORD_SALT'] = os.urandom(156)
+app.config['DEBUG'] = True
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['SECURITY_PASSWORD_SALT'] = b'8\xc3\xe5\xb2\xce=\x0f\xceF\xeat\xaf\xfb|\x8b\x961\xc2$:\x07\t*o\x7f\xdb\xa7\x06\xd2![sr\xc0\xf8{l\rgs\x89"\xd8\xed\x8a\x8dN\xc1\xb2\xb7\xc5\x81\x14k2\xd6a\xf7\xbfv\x13\xb0\x1a\x8c\xbf\xb5\x00\xd7Q\x16\x92\xa9]\x06\xfe\xe4\xfe\xc3\x93\x84\xa7\xc0\xc9Tok2\xf8\xeb\xc6\xeb\xe0o\xca[\xab\x8ckZ\xe0\xd62k\x8b\x0ba\xba\x88\xc9\n\x98U\xcfL9\x87\xc4l\xbb\x8e\x83?\x14\x00\xc22V\xca'
 app.config['SECURITY_CONFIRMABLE'] = True
 app.config['SECURITY_REGISTERABLE'] = True
 app.config['SECURITY_TRACKABLE'] = True
@@ -44,7 +31,6 @@ app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'noreply.fluffybunny@gmail.com'
-# app.config['MAIL_PASSWORD'] = 'nhjulbhjilfmdiyf'
 app.config['MAIL_PASSWORD'] = os.environ['MAIL_PASSWORD']
 app.config['MAIL_DEFAULT_SENDER'] = ('Fluffy Bunny Admins', 'noreply.fluffybunny@gmail.com')
 app.config['MAIL_MAX_EMAILS'] = 5
@@ -54,6 +40,9 @@ app.config['FLASK_ADMIN_SWATCH'] = 'sandstone'
 app.config['SECURITY_POST_LOGIN_VIEW'] = '/about'
 app.config['SECURITY_POST_LOGOUT_VIEW'] = '/home'
 app.config['SECURITY_POST_REGISTER_VIEW'] = '/about'
+app.config['SECURITY_RESET_PASSWORD_WITHIN'] = '1 hours'
+app.config['SECURITY_CONFIRM_EMAIL_WITHIN'] = '24 hours'
+app.config['SECURITY_RECOVERABLE'] = True
 
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
 security = Security(app, user_datastore, register_form=ExtendedRegisterForm)
@@ -96,6 +85,11 @@ admin.add_view(UserAdmin(User, db_session))
 admin.add_view(RoleAdmin(Roles, db_session))
 
 
+def calculate_standings():
+    standings = {}
+
+
+
 @app.route("/")
 def index():
     return render_template("home.html")
@@ -105,21 +99,6 @@ def index():
 def home():
     # need to add this unless it will be handled by Vue/React
     return render_template("home.html")
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('about'))
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
-            return redirect(url_for('login'))
-        login_user(user, remember=form.remember.data)
-        return redirect(url_for('about'))
-    return render_template('security/login_user.html', title='Sign In', form=form)
 
 
 @app.route("/about", methods=["GET"])
@@ -157,7 +136,7 @@ def commanders():
 
 @app.route("/commanders/create", methods=["GET","POST"])
 @login_required
-# @roles_required('admin', 'commissioner')
+@roles_accepted('admin', 'commissioner')
 def create_commanders():
     if request.method == 'POST':
         comm_str = request.form.get("commlist").strip()
@@ -204,44 +183,30 @@ def users():
     else:
         return render_template('users.html')
 
-@app.route("/register", methods=["GET","POST"])
-@login_required
-def register():
-    lnames = ['huey','lovin','strzegowski']
+
+@app.route("/log_game", methods=["GET","POST"])
+@roles_accepted('admin','commissioner','scorekeeper')
+def log_game():
     if request.method == 'POST':
-        """
-        Not currently in use for this iteration
-        fname = request.form['fname']
-        email = request.form['email']
-        """
-        lname = request.form['lname'].lower()
-        usn = request.form['username']
-        if len(usn) > 30:
-            error = 'Username must be less than 30 characters. '
-            return render_template('registration.html', error=error)
-        sec = request.form['security'].lower()
-
-        if sec == 'juggernaut2117' and lname in lnames:
-            do_ins = UserService().create(usn)
-            if do_ins == 'exists':
-                flash('User already exists! ')
-                return redirect(url_for('home'))
-            elif do_ins:
-                flash(f'User "{usn}" successfully created! ')
-                return redirect(url_for('home'))
-            else:
-                error = 'User creation failed. Contact the admin. '
-        else:
-            error = 'Security check failed'
-
-        return render_template('registration.html', error=error)
+        # add scores logic
+        player_scores = {
+            "user_id": 0,
+            "place": 0,
+            "first_blood": False,
+            "commcast": False,
+            "commfourplus": False,
+            "save": 0,
+            "commkill": 0,
+            "attlast": False,
+            "srchforty": 0,
+            "srchplus": 0,
+            "rptcomm": False,
+            "killall": False,
+            "popvote": False
+        }
+        return render_template('log_game.html')
     else:
-        return render_template('security/register_user.html')
-
-
-@app.route("/resetpw", methods=["GET","POST"])
-def reset_password():
-    return render_template('security/reset_password.html')
+        return render_template('log_game.html')
 
 if __name__ == "__main__":
     app.run()

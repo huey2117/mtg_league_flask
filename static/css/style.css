@@ -56,6 +56,52 @@ div.registration {
           border-radius: 6px; */
 }
 
+div.gamelog {
+  padding: 10px 10px 30px 10px;
+  background-color: #E6E6FA;
+  align-items: center;
+  border-radius: 50px;
+  /* -webkit-border-radius: 6px;
+     -moz-border-radius: 6px;
+          border-radius: 6px; */
+}
+
+#log-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.glheader {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 10%;
+}
+
+.gamelog-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+}
+
+.player-form {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+}
+
+.log-block {
+    width: 10%;
+    margin-top: 10px;
+}
+
+.log-submit {
+    justify-content: center;
+}
+
 div.home .welcome-text {
     display: flex;
     text-align: center;
@@ -205,6 +251,13 @@ footer {
   margin: 50px 0 0 0;
   border-top: 4px solid black;
   height: 100px;
+}
+
+@media only screen and (min-width: 800px) {
+  footer {
+    position: fixed;
+    bottom: 0;
+  }
 }
 
 footer .footer-container {

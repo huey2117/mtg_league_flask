@@ -4,14 +4,14 @@ import random
 from database import Base
 from flask_security import UserMixin, RoleMixin, current_user, utils
 from flask_security.forms import PasswordField
-from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import Boolean, DateTime, Column, Integer, String, ForeignKey
+from sqlalchemy import Boolean, DateTime, Column, Integer, String, \
+    ForeignKey, JSON, Date, PrimaryKeyConstraint
 from flask_admin.contrib import sqla
 from flask import redirect, url_for
 
 
-test = False
+test = True
 db_url = os.environ['DATABASE_URL']
 testdb_url = 'dbname=d8dndq07tlbq07 host=localhost port=5432 user=dbtest password=devdbtest'
 
@@ -50,12 +50,6 @@ class User(Base, UserMixin):
     roles = relationship('Roles', secondary='admin.roles_users',
                          backref=backref('admin.users', lazy='dynamic'))
 
-    def set_password(self, password):
-        self.password = utils.hash_password(password)
-
-    def check_password(self, password):
-        return utils.verify_password(password, self.password)
-
 
 class UserCommander(Base):
     __tablename__ = 'user_commander'
@@ -75,11 +69,66 @@ class Commander(Base):
     image_link = Column(String(255))
     scryfall_id = Column(String(64))
 
+
 class DraftCommander(Base):
     __tablename__ = 'draft_commander'
     __table_args__ = ({"schema": "admin"})
     id = Column(Integer(), primary_key=True)
     commander_id = Column('commander_id', Integer(), ForeignKey('admin.commanders.id'))
+
+
+class RptStandings(Base):
+    __tablename__ = 'rpt_standings'
+    __table_args__ = ({"schema": "admin"})
+    user_id = Column('user_id', Integer(), ForeignKey('admin.users.id'), primary_key=True)
+    pts_total = Column(Integer())
+    place_last_game = Column(Integer())
+    pts_last_game = Column(Integer())
+
+
+class RptCurrSeasonByGame(Base):
+    __tablename__ = 'rpt_curr_season_by_game'
+    __table_args__ = ({"schema": "admin"})
+    user_id = Column(Integer(), primary_key=True)
+    games = Column(JSON)
+    first_bloods = Column(Integer())
+    first_places = Column(Integer())
+    second_places = Column(Integer())
+    third_places = Column(Integer())
+    fourth_places = Column(Integer())
+
+
+class GamesScores(Base):
+    __tablename__ = 'games_scores'
+    __table_args__ = (PrimaryKeyConstraint('user_id', 'game_id'),
+                      {"schema": "admin"})
+    user_id = Column('user_id', Integer(), ForeignKey('admin.users.id'))
+    game_id = Column('game_id', Integer(), ForeignKey('admin.games.id'))
+    pts_total = Column(Integer())
+    scores = Column(JSON())
+
+
+class Games(Base):
+    __tablename__ = 'games'
+    __table_args__ = ({"schema": "admin"})
+    id = Column(Integer(), primary_key=True)
+    season_id = Column('season_id', Integer(), ForeignKey('admin.seasons.id'))
+    game_num = Column(Integer())
+    budget = Column(Integer())
+    flex = Column(Boolean)
+    theme = Column(String(255))
+    date = Column(Date())
+
+
+class Seasons(Base):
+    __tablename__ = 'seasons'
+    __table_args__ = ({"schema": "admin"})
+    id = Column(Integer(), primary_key=True)
+    name = Column(String(255))
+    start_date = Column(Date())
+    num_games = Column(Integer())
+    is_current = Column(Boolean())
+    winner_user_id = Column(Integer())
 
 
 class UserAdmin(sqla.ModelView):
@@ -274,8 +323,8 @@ class UserDraftingModel:
     def check_usercomm(self, uid):
         query = f'SELECT c.name ' \
                 f'FROM admin.user_commander uc ' \
-                f'LEFT JOIN admin.draft_commanders c ' \
-                f'ON uc.commander_id = c.commander_id ' \
+                f'LEFT JOIN admin.commanders c ' \
+                f'ON uc.commander_id = c.id ' \
                 f'WHERE uc.user_id = %s ' \
                 f'AND uc.commander_id IS NOT NULL'
 
@@ -317,3 +366,59 @@ class UserDraftingModel:
             return commander[1]
         else:
             return False
+
+
+class Scoring:
+    def __int__(self):
+        if test:
+            self.conn = psycopg2.connect(testdb_url)
+        else:
+            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.cur = self.conn.cursor()
+
+    def __del__(self):
+        self.conn.commit()
+        self.conn.close()
+        self.cur.close()
+
+    def get_standings(self):
+        query = """
+        SELECT u.username,
+                u.first_name,
+                r.pts_total,
+                r.place_last_game,
+                r.pts_last_game
+        FROM rpt_standings r
+        LEFT JOIN users u
+            ON r.user_id = u.user_id
+        WHERE u.user_id IS NOT NULL
+            AND u.active = True
+        ;
+        """
+
+        self.cur.execute(query)
+        standings = self.cur.fetchall()
+        return standings
+
+
+    # def update_standings(self, totals):
+    #     """
+    #     Adding the scores from a new game, only passing in the
+    #     totals for each user for standings purposes. Totals should
+    #     be a dict of form {'user_id': score, ...}
+    #     """
+    #     create_standings_backup = """
+    #     CREATE TABLE tmp_standings_backup AS
+    #     SELECT *
+    #     FROM rpt_standings
+    #     ;
+    #     """
+    #
+    #     update_standings = """
+    #
+    #     """
+    #
+    #     self.cur.execute(create_standings_backup)
+    #
+
+#    def log_game(self, ):
