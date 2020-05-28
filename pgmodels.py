@@ -9,6 +9,7 @@ from sqlalchemy import Boolean, DateTime, Column, Integer, String, \
     ForeignKey, JSON, Date, PrimaryKeyConstraint
 from flask_admin.contrib import sqla
 from flask import redirect, url_for
+import json
 
 
 test = True
@@ -368,8 +369,8 @@ class UserDraftingModel:
             return False
 
 
-class Scoring:
-    def __int__(self):
+class ScoringModel:
+    def __init__(self):
         if test:
             self.conn = psycopg2.connect(testdb_url)
         else:
@@ -381,6 +382,59 @@ class Scoring:
         self.conn.close()
         self.cur.close()
 
+    def get_uid_username_pairs(self):
+        query = """
+        SELECT id, username
+        FROM admin.users
+        WHERE active = True
+        ;
+        """
+        self.cur.execute(query)
+        results = self.cur.fetchall()
+        return results
+
+    def add_scores(self, uid, game_id, pts_total, score):
+
+        def check_scores(uid, game_id):
+            query = f"SELECT * FROM admin.games_scores " \
+                f"WHERE user_id = {uid} " \
+                f"AND game_id = {game_id};"
+
+            self.cur.execute(query)
+            results = self.cur.fetchone
+            if results:
+                return True
+            else:
+                return False
+
+        score = json.dumps(score)
+
+        query = f"INSERT INTO admin.games_scores " \
+            f"VALUES ({uid}, {game_id}, {pts_total}, '{score}') " \
+            f"ON CONFLICT (user_id, game_id) " \
+            f"DO NOTHING; "
+
+        self.cur.execute(query)
+        check = check_scores(uid, game_id)
+
+        if check:
+            return True
+        else:
+            return False
+
+    def get_game_num_id(self):
+        query = """
+                SELECT g.id, g.game_num
+                FROM admin.games g
+                JOIN admin.seasons s
+                    ON g.season_id = s.id
+                WHERE s.is_current = True
+                ;
+                """
+        self.cur.execute(query)
+        results = self.cur.fetchall()
+        return results
+
     def get_standings(self):
         query = """
         SELECT u.username,
@@ -388,8 +442,8 @@ class Scoring:
                 r.pts_total,
                 r.place_last_game,
                 r.pts_last_game
-        FROM rpt_standings r
-        LEFT JOIN users u
+        FROM admin.rpt_standings r
+        LEFT JOIN admin.users u
             ON r.user_id = u.user_id
         WHERE u.user_id IS NOT NULL
             AND u.active = True

@@ -1,7 +1,7 @@
 import os
 import json
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
-from service import CommanderService, DraftingService, UserService
+from service import CommanderService, DraftingService, UserService, ScoringService
 from pgmodels import User, Roles, UserAdmin, RoleAdmin
 from flask_security import Security, SQLAlchemySessionUserDatastore, login_required, utils, \
     current_user, roles_required, roles_accepted
@@ -9,6 +9,7 @@ from flask_security.forms import RegisterForm, Required, StringField, PasswordFi
 from database import db_session, init_db
 from flask_mail import Mail, Message
 from flask_admin import Admin
+import copy
 
 
 class ExtendedRegisterForm(RegisterForm):
@@ -188,22 +189,137 @@ def users():
 @roles_accepted('admin', 'commissioner', 'scorekeeper')
 def log_game():
     if request.method == 'POST':
-        # add scores logic
+        # Game Scores will be stored in the DB
+        game_score = []
+
+        # map usernames to userids
+        un_to_uid = {}
+        pairs = ScoringService().get_uid_username_pairs()
+        for row in pairs:
+            un_to_uid[row[1]] = row[0]
+
+        game_num_to_id = {}
+        game_pairs = ScoringService().get_game_num_id()
+        for row in game_pairs:
+            game_num_to_id[row[1]] = row[0]
+
+        # raw scoring template
         player_scores = {
             "user_id": 0,
+            "game_id": 0,
+            "username": '',
             "place": 0,
+            "pts_total": 0,
             "first_blood": False,
             "commcast": False,
             "commfourplus": False,
             "save": 0,
-            "commkill": 0,
+            "commkill": False,
             "attlast": False,
-            "srchforty": 0,
-            "srchplus": 0,
-            "rptcomm": False,
             "killall": False,
             "popvote": False
         }
+
+        # pts by placement
+        # place_scores = {1: 4, 2: 3, 3: 2, 4: 1}
+
+        # copy the scoring template
+        p_one = copy.deepcopy(player_scores)
+        p_two = copy.deepcopy(player_scores)
+        p_three = copy.deepcopy(player_scores)
+        p_four = copy.deepcopy(player_scores)
+
+        # Fill player dictionaries and append to games list
+        player_dict = {"p_one": "p1", "p_two": "p2", "p_three": "p3", "p_four": "p4"}
+        for k in player_dict:
+            prefix = player_dict[k]
+            if k == 'p_one':
+                pdict = p_one
+            elif k == 'p_two':
+                pdict = p_two
+            elif k == 'p_three':
+                pdict = p_three
+            elif k == 'p_four':
+                pdict = p_four
+            else:
+                pass
+
+            pdict['username'] = request.form[f'{prefix}_username']
+            pdict['user_id'] = un_to_uid[pdict['username']]
+            pdict['game_id'] = game_num_to_id[int(request.form['game_num'])]
+
+            if request.form[f'{prefix}_place'] == 'first':
+                pdict['place'] = 1
+                pdict['pts_total'] += 4
+            elif request.form[f'{prefix}_place'] == 'second':
+                pdict['place'] = 2
+                pdict['pts_total'] += 3
+            elif request.form[f'{prefix}_place'] == 'third':
+                pdict['place'] = 3
+                pdict['pts_total'] += 2
+            elif request.form[f'{prefix}_place'] == 'fourth':
+                pdict['place'] = 4
+                pdict['pts_total'] += 1
+
+            if request.form.get(f'{prefix}_firstblood', False):
+                pdict['first_blood'] = True
+                pdict['pts_total'] += 1
+
+            if request.form.get(f'{prefix}_commcast', False):
+                pdict['commcast'] = True
+
+            if not pdict['commcast']:
+                pdict['pts_total'] -= 1
+
+            if request.form.get(f'{prefix}_commplus', False):
+                pdict['commfourplus'] = True
+                pdict['pts_total'] += 1
+
+            if request.form[f'{prefix}_save'] == 'one':
+                pdict['save'] = 1
+                pdict['pts_total'] += 1
+            elif request.form[f'{prefix}_save'] == 'two':
+                pdict['save'] = 2
+                pdict['pts_total'] += 2
+            elif request.form[f'{prefix}_save'] == 'three':
+                pdict['save'] = 3
+                pdict['pts_total'] += 3
+
+            if request.form.get(f'{prefix}_commkill', False):
+                pdict['commkill'] = True
+                pdict['pts_total'] += 1
+
+            if request.form.get(f'{prefix}_attlast', False):
+                pdict['attlast'] = True
+                pdict['pts_total'] -= 1
+
+            if request.form.get(f'{prefix}_killall', False):
+                pdict['killall'] = True
+                pdict['pts_total'] -= 1
+
+            if request.form.get(f'{prefix}_popvote', False):
+                pdict['popvote'] = True
+                pdict['pts_total'] += 1
+
+            game_score.append(pdict)
+
+        if len(game_score) == len(player_dict):
+            num_scores = len(game_score)
+            flash(f'Scores recorded for {num_scores} players. ')
+
+        for score in game_score:
+            uid = score['user_id']
+            username = score['username']
+            game_id = score['game_id']
+            pts_total = score['pts_total']
+
+            # add game_id
+            insert = ScoringService().add_scores(uid, game_id, pts_total, score)
+            if insert:
+                flash(f'New score row successfully inserted for user: {username}.')
+            else:
+                flash(f'Something went wrong insert row for {username}, contact an admin.')
+
         return render_template('log_game.html')
     else:
         return render_template('log_game.html')

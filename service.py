@@ -1,4 +1,4 @@
-from pgmodels import CommandersModel, UserDraftingModel, UsersModel
+from pgmodels import CommandersModel, UserDraftingModel, UsersModel, ScoringModel
 
 
 class CommanderService:
@@ -35,6 +35,7 @@ class DraftingService:
         else:
             return "No Commanders Available"
 
+
 class UserService:
     def __init__(self):
         self.model = UsersModel()
@@ -45,4 +46,21 @@ class UserService:
 
     def update_username(self, params):
         response = self.model.update_username(params)
+        return response
+
+
+class ScoringService:
+    def __init__(self):
+        self.model = ScoringModel()
+
+    def get_uid_username_pairs(self):
+        response = self.model.get_uid_username_pairs()
+        return response
+
+    def add_scores(self, uid, game_id, pts_total, score):
+        response = self.model.add_scores(uid, game_id, pts_total, score)
+        return response
+
+    def get_game_num_id(self):
+        response = self.model.get_game_num_id()
         return response

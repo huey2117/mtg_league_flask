@@ -26,228 +26,230 @@
             </div>
             <div class="gamelog-form">
                 <form class="player-form" method="post">
-                    <div class="log-block">
-                        <select id="username1" name="username1" style="width: 100%;" required>
-                            <optgroup label="Choose Username">
-                                <option value="" disabled selected hidden></option>
-                                <option value="juggernaut2117">Juggernaut2117</option>
-                                <option value="veritas2112">Veritas2112</option>
-                                <option value="dovinci">Dovinci</option>
-                                <option value="inebis2112">Inebis2112</option>
-                            </optgroup>
-                        </select>
+                    <div id="player1" class="playerdiv">
+                        <div class="log-block">
+                            <select id="p1_username" name="p1_username" style="width: 100%;" required>
+                                <optgroup label="Choose Username">
+                                    <option value="juggernaut2117" selected>Juggernaut2117</option>
+                                    <option value="veritas2112">Veritas2112</option>
+                                    <option value="dovinci">Dovinci</option>
+                                    <option value="inebis2112">Inebis2112</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <select id="p1_place" name="p1_place" type="text" style="width: 100%;">
+                                <optgroup label="Place">
+                                    <option value="" disabled selected hidden></option>
+                                    <option value="first">1st</option>
+                                    <option value="second">2nd</option>
+                                    <option value="third">3rd</option>
+                                    <option value="fourth">4th</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <input id="p1_firstblood" name="p1_firstblood" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p1_commcast" name="p1_commcast" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p1_commplus" name="p1_commplus" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <select id="p1_save" name="p1_save" type="text" style="width: 100%;">
+                                <optgroup label="Saves">
+                                    <option value="zero" selected>0</option>
+                                    <option value="one">1</option>
+                                    <option value="two">2</option>
+                                    <option value="three">3</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <input id="p1_commkill" name="p1_commkill" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p1_attlast" name="p1_attlast" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p1_killall" name="p1_killall" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p1_popvote" name="p1_popvote" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
                     </div>
-                    <div class="log-block">
-                        <select id="place1" name="place1" type="text" style="width: 100%;">
-                            <optgroup label="Place">
-                                <option value="" disabled selected hidden></option>
-                                <option value="first">1st</option>
-                                <option value="second">2nd</option>
-                                <option value="third">3rd</option>
-                                <option value="fourth">4th</option>
-                            </optgroup>
-                        </select>
+                    <div id="player2" class="playerdiv">
+                        <div class="log-block">
+                            <select id="p2_username" name="p2_username" style="width: 100%;" required>
+                                <optgroup label="Choose Username">
+                                    <option value="juggernaut2117">Juggernaut2117</option>
+                                    <option value="veritas2112" selected>Veritas2112</option>
+                                    <option value="dovinci">Dovinci</option>
+                                    <option value="inebis2112">Inebis2112</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <select id="p2_place" name="p2_place" type="text" style="width: 100%;">
+                                <optgroup label="Place">
+                                    <option value="" disabled selected hidden></option>
+                                    <option value="first">1st</option>
+                                    <option value="second">2nd</option>
+                                    <option value="third">3rd</option>
+                                    <option value="fourth">4th</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <input id="p2_firstblood" name="p2_firstblood" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p2_commcast" name="p2_commcast" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p2_commplus" name="p2_commplus" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <select id="p2_save" name="p2_save" type="text" style="width: 100%;">
+                                <optgroup label="Saves">
+                                    <option value="zero" selected>0</option>
+                                    <option value="one">1</option>
+                                    <option value="two">2</option>
+                                    <option value="three">3</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <input id="p2_commkill" name="p2_commkill" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p2_attlast" name="p2_attlast" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p2_killall" name="p2_killall" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p2_popvote" name="p2_popvote" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
                     </div>
-                    <div class="log-block">
-                        <input id="firstblood1" name="firstblood1" type="checkbox" style="width: 100%;"/>
+                    <div id="player3" class="playerdiv">
+                        <div class="log-block">
+                            <select id="p3_username" name="p3_username" style="width: 100%;" required>
+                                <optgroup label="Choose Username">
+                                    <option value="juggernaut2117">Juggernaut2117</option>
+                                    <option value="veritas2112">Veritas2112</option>
+                                    <option value="dovinci" selected>Dovinci</option>
+                                    <option value="inebis2112">Inebis2112</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <select id="p3_place" name="p3_place" type="text" style="width: 100%;">
+                                <optgroup label="Place">
+                                    <option value="" disabled selected hidden></option>
+                                    <option value="first">1st</option>
+                                    <option value="second">2nd</option>
+                                    <option value="third">3rd</option>
+                                    <option value="fourth">4th</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <input id="p3_firstblood" name="p3_firstblood" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p3_commcast" name="p3_commcast" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p3_commplus" name="p3_commplus" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <select id="p3_save" name="p3_save" type="text" style="width: 100%;">
+                                <optgroup label="Saves">
+                                    <option value="zero" selected>0</option>
+                                    <option value="one">1</option>
+                                    <option value="two">2</option>
+                                    <option value="three">3</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <input id="p3_commkill" name="p3_commkill" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p3_attlast" name="p3_attlast" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p3_killall" name="p3_killall" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p3_popvote" name="p3_popvote" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
                     </div>
-                    <div class="log-block">
-                        <input id="commcast1" name="commcast1" type="checkbox" style="width: 100%;"/>
+                    <div id="player4" class="playerdiv">
+                        <div class="log-block">
+                            <select id="p4_username" name="p4_username" style="width: 100%;" required>
+                                <optgroup label="Choose Username">
+                                    <option value="juggernaut2117">Juggernaut2117</option>
+                                    <option value="veritas2112">Veritas2112</option>
+                                    <option value="dovinci">Dovinci</option>
+                                    <option value="inebis2112" selected>Inebis2112</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <select id="p4_place" name="p4_place" type="text" style="width: 100%;">
+                                <optgroup label="Place">
+                                    <option value="" disabled selected hidden></option>
+                                    <option value="first">1st</option>
+                                    <option value="second">2nd</option>
+                                    <option value="third">3rd</option>
+                                    <option value="fourth">4th</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <input id="p4_firstblood" name="p4_firstblood" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p4_commcast" name="p4_commcast" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p4_commplus" name="p4_commplus" type="checkbox" style="width: 100%;"/>
+                        </div>
+                        <div class="log-block">
+                            <select id="p4_save" name="p4_save" type="text" style="width: 100%;">
+                                <optgroup label="Saves">
+                                    <option value="zero" selected>0</option>
+                                    <option value="one">1</option>
+                                    <option value="two">2</option>
+                                    <option value="three">3</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="log-block">
+                            <input id="p4_commkill" name="p4_commkill" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p4_attlast" name="p4_attlast" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p4_killall" name="p4_killall" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
+                        <div class="log-block">
+                            <input id="p4_popvote" name="p4_popvote" type="checkbox" style="width: 100%; margin-top: 10px;"/>
+                        </div>
                     </div>
-                    <div class="log-block">
-                        <input id="commplus1" name="commplus1" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <select id="save1" name="save1" type="text" style="width: 100%;">
-                            <optgroup label="Saves">
-                                <option value="zero" selected>0</option>
-                                <option value="one">1</option>
-                                <option value="two">2</option>
-                                <option value="three">3</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <input id="commkill1" name="commkill1" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="attlast1" name="attlast1" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="killall1" name="killall1" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="popvote1" name="popvote1" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                </form>
-                <form class="player-form" method="post">
-                    <div class="log-block">
-                        <select id="username2" name="username2" style="width: 100%;" required>
-                            <optgroup label="Choose Username">
-                                <option value="" disabled selected hidden></option>
-                                <option value="juggernaut2117">Juggernaut2117</option>
-                                <option value="veritas2112">Veritas2112</option>
-                                <option value="dovinci">Dovinci</option>
-                                <option value="inebis2112">Inebis2112</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <select id="place2" name="place2" type="text" style="width: 100%;">
-                            <optgroup label="Place">
-                                <option value="" disabled selected hidden></option>
-                                <option value="first">1st</option>
-                                <option value="second">2nd</option>
-                                <option value="third">3rd</option>
-                                <option value="fourth">4th</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <input id="firstblood2" name="firstblood2" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="commcast2" name="commcast2" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="commplus2" name="commplus2" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <select id="save2" name="save2" type="text" style="width: 100%;">
-                            <optgroup label="Saves">
-                                <option value="zero" selected>0</option>
-                                <option value="one">1</option>
-                                <option value="two">2</option>
-                                <option value="three">3</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <input id="commkill2" name="commkill2" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="attlast2" name="attlast2" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="killall2" name="killall2" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="popvote2" name="popvote2" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                </form>
-                <form class="player-form" method="post">
-                    <div class="log-block">
-                        <select id="username3" name="username3" style="width: 100%;" required>
-                            <optgroup label="Choose Username">
-                                <option value="" disabled selected hidden></option>
-                                <option value="juggernaut2117">Juggernaut2117</option>
-                                <option value="veritas2112">Veritas2112</option>
-                                <option value="dovinci">Dovinci</option>
-                                <option value="inebis2112">Inebis2112</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <select id="place3" name="place3" type="text" style="width: 100%;">
-                            <optgroup label="Place">
-                                <option value="" disabled selected hidden></option>
-                                <option value="first">1st</option>
-                                <option value="second">2nd</option>
-                                <option value="third">3rd</option>
-                                <option value="fourth">4th</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <input id="firstblood3" name="firstblood3" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="commcast3" name="commcast3" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="commplus3" name="commplus3" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <select id="save3" name="save3" type="text" style="width: 100%;">
-                            <optgroup label="Saves">
-                                <option value="zero" selected>0</option>
-                                <option value="one">1</option>
-                                <option value="two">2</option>
-                                <option value="three">3</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <input id="commkill3" name="commkill3" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="attlast3" name="attlast3" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="killall3" name="killall3" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="popvote3" name="popvote3" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                </form>
-                <form class="player-form" method="post">
-                    <div class="log-block">
-                        <select id="username4" name="username4" style="width: 100%;" required>
-                            <optgroup label="Choose Username">
-                                <option value="" disabled selected hidden></option>
-                                <option value="juggernaut2117">Juggernaut2117</option>
-                                <option value="veritas2112">Veritas2112</option>
-                                <option value="dovinci">Dovinci</option>
-                                <option value="inebis2112">Inebis2112</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <select id="place4" name="place4" type="text" style="width: 100%;">
-                            <optgroup label="Place">
-                                <option value="" disabled selected hidden></option>
-                                <option value="first">1st</option>
-                                <option value="second">2nd</option>
-                                <option value="third">3rd</option>
-                                <option value="fourth">4th</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <input id="firstblood4" name="firstblood4" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="commcast4" name="commcast4" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="commplus4" name="commplus4" type="checkbox" style="width: 100%;"/>
-                    </div>
-                    <div class="log-block">
-                        <select id="save4" name="save4" type="text" style="width: 100%;">
-                            <optgroup label="Saves">
-                                <option value="zero" selected>0</option>
-                                <option value="one">1</option>
-                                <option value="two">2</option>
-                                <option value="three">3</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="log-block">
-                        <input id="commkill4" name="commkill4" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="attlast4" name="attlast4" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="killall4" name="killall4" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                    <div class="log-block">
-                        <input id="popvote4" name="popvote4" type="checkbox" style="width: 100%; margin-top: 10px;"/>
-                    </div>
-                </form>
-                <form class="log-submit">
-                    <div class="users-submit">
-                        <input type="submit" />
+                    <div class="log-submit">
+                        <div class="log-block">
+                            <input type="number" name="game_num" id="game_num" placeholder="Game Num"
+                                style="width: 100%; text-align: center;" required>
+                        </div>
+                        <div class="users-submit">
+                            <input type="submit"/>
+                        </div>
                     </div>
                 </form>
             </div>
