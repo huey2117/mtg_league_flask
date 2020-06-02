@@ -410,9 +410,12 @@ class ScoringModel:
         score = json.dumps(score)
 
         query = f"INSERT INTO admin.games_scores " \
-            f"VALUES ({uid}, {game_id}, {pts_total}, '{score}') " \
-            f"ON CONFLICT (user_id, game_id) " \
-            f"DO NOTHING; "
+                f"(user_id, game_id, pts_total, scores) " \
+                f"VALUES ({uid}, {game_id}, {pts_total}, '{score}') " \
+                f"ON CONFLICT (user_id, game_id) " \
+                f"DO UPDATE " \
+                f"SET pts_total = EXCLUDED.pts_total, " \
+                f"scores = EXCLUDED.scores; "
 
         self.cur.execute(query)
         check = check_scores(uid, game_id)
@@ -444,9 +447,10 @@ class ScoringModel:
                 r.pts_last_game
         FROM admin.rpt_standings r
         LEFT JOIN admin.users u
-            ON r.user_id = u.user_id
-        WHERE u.user_id IS NOT NULL
+            ON r.user_id = u.id
+        WHERE u.id IS NOT NULL
             AND u.active = True
+        ORDER BY r.pts_total DESC
         ;
         """
 
@@ -454,25 +458,124 @@ class ScoringModel:
         standings = self.cur.fetchall()
         return standings
 
+    def rebuild_standings(self):
+        create_standings_backup = """
+        CREATE TABLE IF NOT EXISTS admin.tmp_standings_backup 
+        (LIKE admin.rpt_standings)
+        ;
+        """
 
-    # def update_standings(self, totals):
-    #     """
-    #     Adding the scores from a new game, only passing in the
-    #     totals for each user for standings purposes. Totals should
-    #     be a dict of form {'user_id': score, ...}
-    #     """
-    #     create_standings_backup = """
-    #     CREATE TABLE tmp_standings_backup AS
-    #     SELECT *
-    #     FROM rpt_standings
-    #     ;
-    #     """
-    #
-    #     update_standings = """
-    #
-    #     """
-    #
-    #     self.cur.execute(create_standings_backup)
-    #
+        cleanup_backup = "DELETE FROM admin.tmp_standings_backup;"
+        update_backup = """
+        INSERT INTO admin.tmp_standings_backup
+        SELECT * FROM admin.rpt_standings
+        ;"""
 
-#    def log_game(self, ):
+        rebuild_standings = """
+        WITH cte_curr (game_id) AS
+        (SELECT g.id
+        FROM admin.games g
+        JOIN admin.seasons s
+            ON g.season_id = s.id
+        WHERE s.is_current = True),
+        cte_mr (mr_game_id) AS
+        (SELECT max(game_id) as mr_game_id
+        FROM admin.games_scores)
+        INSERT INTO admin.rpt_standings (user_id, pts_total, place_last_game, pts_last_game)
+        SELECT curr.user_id,
+                curr.pts_total,
+                mr.place_last_game,
+                mr.pts_last_game
+        FROM (SELECT gs.user_id,
+                    sum(gs.pts_total) AS pts_total
+            FROM admin.games_scores gs
+            LEFT JOIN cte_curr c
+                ON gs.game_id = c.game_id
+            WHERE c.game_id IS NOT NULL
+            GROUP BY gs.user_id
+            ) as curr
+        JOIN (SELECT gs.user_id,
+                    gs.pts_total as pts_last_game,
+                    (gs.scores->>'place')::INT as place_last_game
+            FROM admin.games_scores gs
+            LEFT JOIN cte_mr cm
+                ON gs.game_id = cm.mr_game_id
+            WHERE cm.mr_game_id IS NOT NULL
+            ) as mr
+            ON curr.user_id = mr.user_id
+        WHERE mr.user_id IS NOT NULL
+        ON CONFLICT (user_id) 
+        DO UPDATE 
+        SET pts_total = EXCLUDED.pts_total,
+            place_last_game = EXCLUDED.place_last_game,
+            pts_last_game = EXCLUDED.pts_last_game
+        ;       
+        """
+
+        self.cur.execute(create_standings_backup)
+        self.cur.execute(cleanup_backup)
+        self.cur.execute(update_backup)
+        self.cur.execute(rebuild_standings)
+
+        return True
+
+    def restore_standings(self):
+        cleanup_sql = "DELETE FROM admin.rpt_standings;"
+
+        restore_sql = """
+        INSERT INTO admin.rpt_standings
+        SELECT * 
+        FROM admin.tmp_standings_backup
+        ;
+        """
+
+        self.cur.execute(cleanup_sql)
+        self.cur.execute(restore_sql)
+
+
+class InfoModel:
+    def __init__(self):
+        if test:
+            self.conn = psycopg2.connect(testdb_url)
+        else:
+            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.cur = self.conn.cursor()
+
+    def __del__(self):
+        self.conn.commit()
+        self.conn.close()
+        self.cur.close()
+
+    def get_curr_season_info(self):
+        query = """
+        SELECT s.name,
+                count(DISTINCT g.id) as games_total,
+                count(DISTINCT gs.game_id) as games_played
+        FROM admin.seasons s
+        JOIN admin.games g
+            ON s.id = g.season_id
+        LEFT JOIN admin.games_scores gs
+            ON g.id = gs.game_id
+        WHERE s.is_current = True
+            AND g.id IS NOT NULL
+        GROUP BY s.name
+        ;"""
+
+        self.cur.execute(query)
+        results = self.cur.fetchone()
+        return results
+
+    def get_games_info(self):
+        query = """
+        SELECT g.game_num,
+                g.theme,
+                g.budget
+        FROM admin.games g
+        JOIN admin.seasons s
+            on g.season_id = s.id
+        WHERE s.is_current = True
+        ;"""
+
+        self.cur.execute(query)
+        results = self.cur.fetchall()
+        return results

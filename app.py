@@ -1,11 +1,15 @@
 import os
 import json
-from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
-from service import CommanderService, DraftingService, UserService, ScoringService
+from flask import Flask, request, jsonify, render_template, redirect, \
+    url_for, flash
+from service import CommanderService, DraftingService, UserService, \
+    ScoringService, InfoService
 from pgmodels import User, Roles, UserAdmin, RoleAdmin
-from flask_security import Security, SQLAlchemySessionUserDatastore, login_required, utils, \
+from flask_security import Security, SQLAlchemySessionUserDatastore, \
+    login_required, utils, \
     current_user, roles_required, roles_accepted
-from flask_security.forms import RegisterForm, Required, StringField, PasswordField, LoginForm
+from flask_security.forms import RegisterForm, Required, StringField, \
+    PasswordField, LoginForm
 from database import db_session, init_db
 from flask_mail import Mail, Message
 from flask_admin import Admin
@@ -17,65 +21,36 @@ class ExtendedRegisterForm(RegisterForm):
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
+# Moved configs to config file
+app.config.from_pyfile('config.py')
+
 """
 If DEBUG = True, set Test = True in pgmodel and database
 """
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-app.config['SECURITY_PASSWORD_SALT'] = b'8\xc3\xe5\xb2\xce=\x0f\xceF\xeat\xaf\xfb|\x8b\x961\xc2$:\x07\t*o\x7f\xdb\xa7\x06\xd2![sr\xc0\xf8{l\rgs\x89"\xd8\xed\x8a\x8dN\xc1\xb2\xb7\xc5\x81\x14k2\xd6a\xf7\xbfv\x13\xb0\x1a\x8c\xbf\xb5\x00\xd7Q\x16\x92\xa9]\x06\xfe\xe4\xfe\xc3\x93\x84\xa7\xc0\xc9Tok2\xf8\xeb\xc6\xeb\xe0o\xca[\xab\x8ckZ\xe0\xd62k\x8b\x0ba\xba\x88\xc9\n\x98U\xcfL9\x87\xc4l\xbb\x8e\x83?\x14\x00\xc22V\xca'
-app.config['SECURITY_CONFIRMABLE'] = True
-app.config['SECURITY_REGISTERABLE'] = True
-app.config['SECURITY_TRACKABLE'] = True
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'noreply.fluffybunny@gmail.com'
-app.config['MAIL_PASSWORD'] = os.environ['MAIL_PASSWORD']
-app.config['MAIL_DEFAULT_SENDER'] = ('Fluffy Bunny Admins', 'noreply.fluffybunny@gmail.com')
-app.config['MAIL_MAX_EMAILS'] = 5
-app.config['MAIL_SUPPRESS_SEND'] = False
-app.config['MAIL_ASCII_ATTACHMENTS'] = False
-app.config['FLASK_ADMIN_SWATCH'] = 'sandstone'
-app.config['SECURITY_POST_LOGIN_VIEW'] = '/about'
-app.config['SECURITY_POST_LOGOUT_VIEW'] = '/home'
-app.config['SECURITY_POST_REGISTER_VIEW'] = '/about'
-app.config['SECURITY_RESET_PASSWORD_WITHIN'] = '1 hours'
-app.config['SECURITY_CONFIRM_EMAIL_WITHIN'] = '24 hours'
-app.config['SECURITY_RECOVERABLE'] = True
 
+# Initialize SQLA Datastore
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
+
+# Initialize Flask-Security
 security = Security(app, user_datastore, register_form=ExtendedRegisterForm)
+
+# Initialize Flask-Mail
 mail = Mail(app)
 
 
-@app.before_first_request
-def before_first_request():
-    init_db()
-    user_datastore.find_or_create_role(name='admin', description='Administrator')
-    user_datastore.find_or_create_role(name='commissioner', description='League Commissioner')
-    user_datastore.find_or_create_role(name='player', description='League Participant')
-    user_datastore.find_or_create_role(name='scorekeeper', description='Designated Scorekeeper')
-    db_session.commit()
-
-    # Testing Users and Roles
-    # encrypted_password = utils.hash_password('testingflasksec')
-    # if not user_datastore.get_user('michaelyeuh@gmail.com'):
-    #     user_datastore.create_user(email='michaelyeuh@gmail.com', password=encrypted_password)
-    # if not user_datastore.get_user('natelovin@gmail.com'):
-    #     user_datastore.create_user(email='natelovin@gmail.com', password=encrypted_password)
-    # if not user_datastore.get_user('scorekeeper@fakemail.com'):
-    #     user_datastore.create_user(email='scorekeeper@fakemail.com', password=encrypted_password)
-    # if not user_datastore.get_user('user@fbc.org'):
-    #     user_datastore.create_user(email='user@fbc.org', password=encrypted_password)
-    # db_session.commit()
-    #
-    # user_datastore.add_role_to_user('michaelyeuh@gmail.com', 'admin')
-    # user_datastore.add_role_to_user('natelovin@gmail.com', 'commissioner')
-    # user_datastore.add_role_to_user('scorekeeper@fakemail.com', 'scorekeeper')
-    # user_datastore.add_role_to_user('user@fbc.org', 'player')
-    # db_session.commit()
+# @app.before_first_request
+# def before_first_request():
+# init_db()
+# user_datastore.find_or_create_role(name='admin',
+#                                    description='Administrator')
+# user_datastore.find_or_create_role(name='commissioner',
+#                                    description='League Commissioner')
+# user_datastore.find_or_create_role(name='player',
+#                                    description='League Participant')
+# user_datastore.find_or_create_role(name='scorekeeper',
+#                                    description='Designated Scorekeeper')
+# db_session.commit()
 
 
 # Initialize Flask-Admin
@@ -86,9 +61,17 @@ admin.add_view(UserAdmin(User, db_session))
 admin.add_view(RoleAdmin(Roles, db_session))
 
 
-def calculate_standings():
-    standings = {}
+def update_standings():
+    # This calls a full backup and rebuild of the rpt_standings table
+    standings = ScoringService().rebuild_standings()
+    if standings:
+        return True
 
+
+def restore_standings_from_backup():
+    standings = ScoringService().restore_standings()
+    if standings:
+        return True
 
 
 @app.route("/")
@@ -105,7 +88,20 @@ def home():
 @app.route("/about", methods=["GET"])
 @login_required
 def about():
-    return render_template('about.html')
+    season_number, games_total, games_played = InfoService().get_curr_season_info()
+    games_info = InfoService().get_games_info()
+    games = [{"num": game[0], "theme": game[1], "budget": game[2]}
+             for game in games_info]
+    get_standings = ScoringService().get_standings()
+    if get_standings:
+        standings = [{"username": row[0], "name": row[1], "pts_total": row[2],
+                  "place_last_game": row[3], "pts_last_game": row[4]}
+                 for row in get_standings]
+    else:
+        standings = None
+
+    return render_template('about.html', snum=season_number, gp=games_played,
+                           gt=games_total, games=games, standings=standings)
 
 
 @app.route("/draft", methods=["GET", "POST"])
@@ -115,7 +111,8 @@ def draft():
         username = request.form['username']
         user_id = DraftingService().userid(username)
         if not user_id:
-            error = 'Username does not exist. Please register or contact admin. '
+            error = 'Username does not exist. Please register or contact ' \
+                    'admin. '
             return render_template('draft.html', error=error)
         comm_check = DraftingService().usercomm(user_id)
         if comm_check:
@@ -173,10 +170,11 @@ def users():
                 error = 'User ID incorrect or invalid, please contact admin. '
                 return render_template('users.html', error=error)
             elif do_update:
-                flash(f'Username successfully updated to {usn}')
+                flash(f'Username successfully updated to {usn}', 'success')
                 return redirect(url_for('home'))
             else:
-                error = "An error occurred while updating, please contact the admin. "
+                error = "An error occurred while updating, please contact" \
+                        " the admin. "
             return render_template('users.html', error=error)
         else:
             error = "Security check failed. "
@@ -230,7 +228,8 @@ def log_game():
         p_four = copy.deepcopy(player_scores)
 
         # Fill player dictionaries and append to games list
-        player_dict = {"p_one": "p1", "p_two": "p2", "p_three": "p3", "p_four": "p4"}
+        player_dict = {"p_one": "p1", "p_two": "p2", "p_three": "p3",
+                       "p_four": "p4"}
         for k in player_dict:
             prefix = player_dict[k]
             if k == 'p_one':
@@ -305,7 +304,7 @@ def log_game():
 
         if len(game_score) == len(player_dict):
             num_scores = len(game_score)
-            flash(f'Scores recorded for {num_scores} players. ')
+            flash(f'Scores recorded for {num_scores} players. ', 'success')
 
         for score in game_score:
             uid = score['user_id']
@@ -314,15 +313,32 @@ def log_game():
             pts_total = score['pts_total']
 
             # add game_id
-            insert = ScoringService().add_scores(uid, game_id, pts_total, score)
+            insert = ScoringService().add_scores(uid, game_id, pts_total,
+                                                 score)
             if insert:
-                flash(f'New score row successfully inserted for user: {username}.')
+                flash(f'New score row successfully inserted for user: '
+                      f'{username}.', 'success')
             else:
-                flash(f'Something went wrong insert row for {username}, contact an admin.')
+                flash(f'Something went wrong insert row for {username}, '
+                      f'contact an admin.', 'danger')
+
+        us = update_standings()
+        if us:
+            flash('Standings updated.')
 
         return render_template('log_game.html')
     else:
         return render_template('log_game.html')
+
+
+@app.route('/rules', methods=['GET'])
+def rules():
+    # Page Includes:
+    # Full Breakdown of Last Game
+    # Current Season by Game
+    # Scoring Ruleset Breakdown
+    return render_template('rules.html')
+
 
 if __name__ == "__main__":
     app.run()

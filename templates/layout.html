@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+        $('.flash-messages').fadeOut(3500);
+            });
+        });
+    </script>
 </head>
 <body>
     <header>
@@ -10,7 +18,12 @@
             <strong><nav>
                 <ul class="menu">
                     <li><a class="menu-item" href=" {{ url_for('home') }}">Home</a></li>
-                    <li><a class="menu-item" href=" {{ url_for('about') }}">About</a></li>
+                    <li><div class="dropdown">
+                        <a class="dropdown-btn">About<i class="fa fa-caret-down"></i></a>
+                        <div class="dropdown-content">
+                            <a href=" {{ url_for('about') }}">About</a>
+                            <a href=" {{ url_for('rules') }}">Rules</a>
+                        </div></li>
                     <li><a class="menu-item" href=" {{ url_for('commanders') }}">Commanders</a></li>
                     <li><a class="menu-item" href=" {{ url_for('draft') }}">Draft</a></li>
                     <li>{% if current_user.has_role('admin')
@@ -29,17 +42,45 @@
         </div>
     </header>
     <div class="flash-messages">
-        {% with messages = get_flashed_messages() %}
+        {% with messages = get_flashed_messages(category_filter=["success"]) %}
             {% if messages %}
-                <ul class="flashes">
+                <div class="flashes">
                     {% for message in messages %}
-                        <li>{{ message }}</li>
+                        <div class="alert alert-success" role="alert">
+                            <span>{{ message }}</span>
+                        </div>
                     {% endfor %}
-                </ul>
+                </div>
             {% endif %}
         {% endwith %}
-        {% block body %}{% endblock %}
     </div>
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(category_filter=["warning"]) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for message in messages %}
+                        <div class="alert alert-warning" role="alert">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(category_filter=["danger"]) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for message in messages %}
+                        <div class="alert alert-danger" role="alert">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+    {% block body %}{% endblock %}
     <div class="container">
         {% block content %}
         {% endblock %}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home of the Fluffy Bunny League</title>
+</head>
+<body>
+    {% extends "layout.html" %}
+    {% block content %}
+        <div class="about">
+            <h1>League Rules and Scoring</h1>
+            <div class="about-desc">
+                <h2>Scoring Overview</h2>
+                <label for="scoring" id="scoring-label">Points are earned (or lost) according to the following: </label>
+                <ul id="scoring" class="scoring">
+                    <li>+4/3/2/1 points for 1st, 2nd, 3rd, and 4th place respectively</li>
+                    <li>+1 to the player who draws first blood (combat damage only)</li>
+                    <li>+1 for casting your commander four or more times</li>
+                    <li>+1 saving another player from elimination (max 1/opponent)</li>
+                    <li>+1 killing anyone with commander damage (max 1 point)</li>
+                    <li>-1 killing everyone in the same turn or going infinite</li>
+                    <li>-1 attacking the player in sole possession of last place (in standings)</li>
+                    <ul>
+                        <li>Only applies if 4+ players at table</li>
+                        <li>Does not apply if they attack you first</li>
+                        <li>If the player in last does more than 10 damage to an opponent, limitations are removed for that opponent.</li>
+                    </ul>
+                    <li>-1 failing to cast/play your commander from the command zone</li>
+                    <li>+1 to the player whose deck receives the most votes at the end of the game</li>
+                </ul>
+            </div>
+            <div class="separator"></div>
+            <div id="rules" class="about-desc">
+                <h2 style="margin-bottom: 5px;">Rules and Restrictions</h2>
+                <ol id="rules-list" class="scoring">
+                    <li>Points are accrued each match, with the sum of all matches being the season score</li>
+                    <li>At the end of each match, players will calculate points together and will agree upon totals.</li>
+                    <li>Any budget restrictions exclude commander cost and basic land cost.</li>
+                    <li>Flex Cash Cards: If a budget includes flex, you receive an additional 50$ in flex cash to "buy" 3 cards. Whatever flex cash
+                        is leftover does not feed back into your deck costs. </li>
+                    <ol class="alpha-list">
+                        <li>These slots exist to give players access to more expensive cards and help alleviate budget
+                        restraints and allow for the inclusion of a few 10-15$ cards in decks. </li>
+                        <li>Further, these slots facilitate the inclusion of fetch lands and tutors which are
+                            prohibitively expensive. Fetch lands and tutors chosen to fill flex slots cost 15$ towards
+                            your flex card budget.</li>
+                    </ol>
+                    <li>Budget / Deck costs are determined by Deckstats.net.</li>
+                    <li>Themes must be agreed upon by ⅔ majority to be enforced.</li>
+                    <li>A player cannot repeat a color as defined by the below Color Repetition definition*</li>
+                    <ol class="alpha-list">
+                        <li>Repetition only counts for consecutive games</li>
+                        <li>For the purposes of “color” definition, colorless IS a color (ex: eldrazi decks)</li>
+                        <li>Repetition is based on the number of colors played in the prior game: </li>
+                        <ol class="roman-list">
+                            <li>1 color prior means you can’t play that color, except in 3/4/5 color decks</li>
+                            <li>2 colors prior means you can’t play either of those colors in a mono or duo combo, except
+                                in 4/5 color decks. You also cannot play both colors in a 3 color deck.</li>
+                            <li>3 colors prior means you can’t play any two combo of those colors, except in a 4/5 color
+                                deck</li>
+                            <li>4/5 colors prior means you have to play a mono or 2 color deck.</li>
+                            <li>Graphical explanation of some of these limits below</li>
+                        </ol>
+                    </ol>
+                </ol>
+            </div>
+            <div class="separator"></div>
+            <div id="color-rep" class="about-desc">
+                <h2>Color Repetition Graphic</h2>
+                <p style="width: 500px; font-style: italic;">Note: the non-bulleted version of "playing" really means "what you last played"
+                    and the bulleted version means what you are playing next.</p>
+                <img src="/static/assets/color_rep_graphic.png" alt="Color Repetition Graphic">
+            </div>
+        </div>
+    {% endblock %}
+</body>
+</html>

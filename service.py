@@ -1,4 +1,5 @@
-from pgmodels import CommandersModel, UserDraftingModel, UsersModel, ScoringModel
+from pgmodels import CommandersModel, UserDraftingModel, UsersModel, \
+    ScoringModel, InfoModel
 
 
 class CommanderService:
@@ -63,4 +64,29 @@ class ScoringService:
 
     def get_game_num_id(self):
         response = self.model.get_game_num_id()
+        return response
+
+    def get_standings(self):
+        response = self.model.get_standings()
+        return response
+
+    def rebuild_standings(self):
+        response = self.model.rebuild_standings()
+        return response
+
+    def restore_standings(self):
+        response = self.model.restore_standings()
+        return response
+
+
+class InfoService:
+    def __init__(self):
+        self.model = InfoModel()
+
+    def get_curr_season_info(self):
+        response = self.model.get_curr_season_info()
+        return response
+
+    def get_games_info(self):
+        response = self.model.get_games_info()
         return response

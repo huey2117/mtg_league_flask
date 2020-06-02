@@ -8,8 +8,81 @@
     {% extends "layout.html" %}
     {% block content %}
         <div class="about">
-            <h1>A Python tool</h1>
-            <p>Built by Michael Huey for the FBC</p>
+            <h1>Fluffy Bunny EDH League</h1>
+            <div class="about-desc">
+                <h2>About Us</h2>
+                <p>We are a group of nerds who play a variety of games. We love playing Commander,
+                    so we decided to do something cool with it by creating an online EDH League played
+                    via <a href="https://www.cockatrice.us/">Cockatrice</a> utilizing themed games with
+                    budget limits and an in-house scoring system</p>
+            </div>
+            <div class="separator"></div>
+            <div id="about-standings-tables" class="div-standings-table">
+                <h2>Current Standings</h2>
+                <ul id="season-stats">
+                    <li>Current Season: {{ snum }}</li>
+                    <li>Games Played: {{ gp }} / {{ gt }}</li>
+                </ul>
+                {% if standings %}
+                <table id="standings-table" class="standings-table" style="width: 130%">
+                    <tr id="standings-table-header" class="standings-table-header">
+                        {% if current_user.has_role('admin') or
+                            current_user.has_role('commissioner') or
+                            current_user.has_role('scorekeeper') or
+                            current_user.has_role('player') %}
+                            <th>Player Name</th>
+                        {% else %}
+                            <th>Username</th>
+                        {% endif %}
+                        <th>Total Points</th>
+                        <th>Place Last</th>
+                        <th>Pts Last</th>
+                    </tr>
+                    {% for row in standings %}
+                    <tr class="standings-table-row">
+                       {% if current_user.has_role('admin') or
+                            current_user.has_role('commissioner') or
+                            current_user.has_role('scorekeeper') or
+                            current_user.has_role('player') %}
+                            <td class="standings-user-col">{{ row.name }}</td>
+                        {% else %}
+                            <td class="standings-user-col">{{ row.username }}</td>
+                        {% endif %}
+                        <td class="table-numbers">{{ row.pts_total }}</td>
+                        <td class="table-numbers">{{ row.place_last_game }}</td>
+                        <td class="table-numbers">{{ row.pts_last_game }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% endif %}
+            </div>
+            {% if curr_champ %}
+            <div class="separator"></div>
+            <div id="curr-champ">
+                <h2>Reigning Champion</h2>
+                {% if current_user.has_role('admin') or
+                    current_user.has_role('commissioner') or
+                    current_user.has_role('scorekeeper') or
+                    current_user.has_role('player') %}
+                <h3>{{ curr_champ.name }}</h3>
+                {% else %}
+                <h3>{{ curr_champ.username }}</h3>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="separator"></div>
+            <div id="about-curr-season-info" class="info">
+                <h2>{{ snum }} Themes and Budgets</h2>
+                <div id="season-themes">
+                    {% for game in games %}
+                    {% if game.budget != 0 %}
+                    <span>Game {{ game.num }} - ${{ game.budget }} - {{ game.theme }}</span>
+                    {% else %}
+                    <span>Game {{ game.num }} - None - {{ game.theme }}</span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     {% endblock %}
 </body>
