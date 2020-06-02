@@ -44,9 +44,6 @@ div.home {
   flex-direction: column;
   align-items: center;
   border-radius: 50px;
-  /* -webkit-border-radius: 6px;
-     -moz-border-radius: 6px;
-          border-radius: 6px; */
 }
 
 div.registration {
@@ -119,10 +116,31 @@ div.gamelog {
     justify-content: center;
 }
 
+.mtg-m-logo {
+    height: 35px;
+    width: 35px;
+    margin: 0 10px;
+    display: inline-block;
+    padding-top: 18px;
+}
+
+#welcome-header {
+    display: flex;
+    flex-direction: row;
+}
+
 div.home .welcome-text {
     display: flex;
     text-align: center;
-    line-height: 150%;
+    line-height: 100%;
+    margin: 10px 0 0 0;
+}
+
+div.home a:hover {
+    background-color: darkblue;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
 }
 
 div.about {
@@ -375,6 +393,7 @@ form input[type="submit"]:hover {
 .scoring, .rules {
     text-align: left;
     margin-top: 5px;
+    line-height: 135%;
 }
 
 #scoring-label {
