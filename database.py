@@ -4,7 +4,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 
-test = True
+test = False
 if test:
     postgres = {
         'user': 'dbtest',

@@ -27,7 +27,7 @@ app.config.from_pyfile('config.py')
 """
 If DEBUG = True, set Test = True in pgmodel and database
 """
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 
 # Initialize SQLA Datastore
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
