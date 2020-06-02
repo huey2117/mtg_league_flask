@@ -39,9 +39,9 @@ security = Security(app, user_datastore, register_form=ExtendedRegisterForm)
 mail = Mail(app)
 
 
-# @app.before_first_request
-# def before_first_request():
-# init_db()
+@app.before_first_request
+def before_first_request():
+    init_db()
 # user_datastore.find_or_create_role(name='admin',
 #                                    description='Administrator')
 # user_datastore.find_or_create_role(name='commissioner',
