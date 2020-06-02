@@ -1,14 +1,19 @@
 import os
 import json
-from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
-from service import CommanderService, DraftingService, UserService
+from flask import Flask, request, jsonify, render_template, redirect, \
+    url_for, flash
+from service import CommanderService, DraftingService, UserService, \
+    ScoringService, InfoService
 from pgmodels import User, Roles, UserAdmin, RoleAdmin
-from flask_security import Security, SQLAlchemySessionUserDatastore, login_required, utils, \
-    current_user, login_user
-from flask_security.forms import RegisterForm, Required, StringField, PasswordField, LoginForm
+from flask_security import Security, SQLAlchemySessionUserDatastore, \
+    login_required, utils, \
+    current_user, roles_required, roles_accepted
+from flask_security.forms import RegisterForm, Required, StringField, \
+    PasswordField, LoginForm
 from database import db_session, init_db
 from flask_mail import Mail, Message
 from flask_admin import Admin
+import copy
 
 
 class ExtendedRegisterForm(RegisterForm):
@@ -16,76 +21,36 @@ class ExtendedRegisterForm(RegisterForm):
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
-# app.config['DEBUG'] = True
-"""
-On next restart of PC, env var for db_url and mail_password should be set.
-Can clean this up then. Also clean up in database.py.
-"""
-if app.config['DEBUG']:
-    postgres = {
-        'user': 'dbtest',
-        'password': 'devdbtest',
-        'host': 'localhost',
-        'port': '5432',
-        'dbname': 'd8dndq07tlbq07'
-    }
-    db_url = f"postgresql://{postgres['user']}:{postgres['password']}@" \
-        f"{postgres['host']}:{postgres['port']}/{postgres['dbname']}"
-else:
-    db_url = os.environ['DATABASE_URL']
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-app.config['SECURITY_PASSWORD_SALT'] = os.urandom(156)
-app.config['SECURITY_CONFIRMABLE'] = True
-app.config['SECURITY_REGISTERABLE'] = True
-app.config['SECURITY_TRACKABLE'] = True
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'noreply.fluffybunny@gmail.com'
-# app.config['MAIL_PASSWORD'] = 'nhjulbhjilfmdiyf'
-app.config['MAIL_PASSWORD'] = os.environ['MAIL_PASSWORD']
-app.config['MAIL_DEFAULT_SENDER'] = ('Fluffy Bunny Admins', 'noreply.fluffybunny@gmail.com')
-app.config['MAIL_MAX_EMAILS'] = 5
-app.config['MAIL_SUPPRESS_SEND'] = False
-app.config['MAIL_ASCII_ATTACHMENTS'] = False
-app.config['FLASK_ADMIN_SWATCH'] = 'sandstone'
-app.config['SECURITY_POST_LOGIN_VIEW'] = '/about'
-app.config['SECURITY_POST_LOGOUT_VIEW'] = '/home'
-app.config['SECURITY_POST_REGISTER_VIEW'] = '/about'
+# Moved configs to config file
+app.config.from_pyfile('config.py')
 
+"""
+If DEBUG = True, set Test = True in pgmodel and database
+"""
+app.config['DEBUG'] = False
+
+# Initialize SQLA Datastore
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
+
+# Initialize Flask-Security
 security = Security(app, user_datastore, register_form=ExtendedRegisterForm)
+
+# Initialize Flask-Mail
 mail = Mail(app)
 
 
-@app.before_first_request
-def before_first_request():
-    init_db()
-    user_datastore.find_or_create_role(name='admin', description='Administrator')
-    user_datastore.find_or_create_role(name='commissioner', description='League Commissioner')
-    user_datastore.find_or_create_role(name='player', description='League Participant')
-    user_datastore.find_or_create_role(name='scorekeeper', description='Designated Scorekeeper')
-    db_session.commit()
-
-    # Testing Users and Roles
-    # encrypted_password = utils.hash_password('testingflasksec')
-    # if not user_datastore.get_user('michaelyeuh@gmail.com'):
-    #     user_datastore.create_user(email='michaelyeuh@gmail.com', password=encrypted_password)
-    # if not user_datastore.get_user('natelovin@gmail.com'):
-    #     user_datastore.create_user(email='natelovin@gmail.com', password=encrypted_password)
-    # if not user_datastore.get_user('scorekeeper@fakemail.com'):
-    #     user_datastore.create_user(email='scorekeeper@fakemail.com', password=encrypted_password)
-    # if not user_datastore.get_user('user@fbc.org'):
-    #     user_datastore.create_user(email='user@fbc.org', password=encrypted_password)
-    # db_session.commit()
-    #
-    # user_datastore.add_role_to_user('michaelyeuh@gmail.com', 'admin')
-    # user_datastore.add_role_to_user('natelovin@gmail.com', 'commissioner')
-    # user_datastore.add_role_to_user('scorekeeper@fakemail.com', 'scorekeeper')
-    # user_datastore.add_role_to_user('user@fbc.org', 'player')
-    # db_session.commit()
+# @app.before_first_request
+# def before_first_request():
+# init_db()
+# user_datastore.find_or_create_role(name='admin',
+#                                    description='Administrator')
+# user_datastore.find_or_create_role(name='commissioner',
+#                                    description='League Commissioner')
+# user_datastore.find_or_create_role(name='player',
+#                                    description='League Participant')
+# user_datastore.find_or_create_role(name='scorekeeper',
+#                                    description='Designated Scorekeeper')
+# db_session.commit()
 
 
 # Initialize Flask-Admin
@@ -94,6 +59,19 @@ admin = Admin(app)
 # Add Flask-Admin views for Users and Roles
 admin.add_view(UserAdmin(User, db_session))
 admin.add_view(RoleAdmin(Roles, db_session))
+
+
+def update_standings():
+    # This calls a full backup and rebuild of the rpt_standings table
+    standings = ScoringService().rebuild_standings()
+    if standings:
+        return True
+
+
+def restore_standings_from_backup():
+    standings = ScoringService().restore_standings()
+    if standings:
+        return True
 
 
 @app.route("/")
@@ -107,25 +85,23 @@ def home():
     return render_template("home.html")
 
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('about'))
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
-            return redirect(url_for('login'))
-        login_user(user, remember=form.remember.data)
-        return redirect(url_for('about'))
-    return render_template('security/login_user.html', title='Sign In', form=form)
-
-
 @app.route("/about", methods=["GET"])
 @login_required
 def about():
-    return render_template('about.html')
+    season_number, games_total, games_played = InfoService().get_curr_season_info()
+    games_info = InfoService().get_games_info()
+    games = [{"num": game[0], "theme": game[1], "budget": game[2]}
+             for game in games_info]
+    get_standings = ScoringService().get_standings()
+    if get_standings:
+        standings = [{"username": row[0], "name": row[1], "pts_total": row[2],
+                  "place_last_game": row[3], "pts_last_game": row[4]}
+                 for row in get_standings]
+    else:
+        standings = None
+
+    return render_template('about.html', snum=season_number, gp=games_played,
+                           gt=games_total, games=games, standings=standings)
 
 
 @app.route("/draft", methods=["GET", "POST"])
@@ -135,7 +111,8 @@ def draft():
         username = request.form['username']
         user_id = DraftingService().userid(username)
         if not user_id:
-            error = 'Username does not exist. Please register or contact admin. '
+            error = 'Username does not exist. Please register or contact ' \
+                    'admin. '
             return render_template('draft.html', error=error)
         comm_check = DraftingService().usercomm(user_id)
         if comm_check:
@@ -157,7 +134,7 @@ def commanders():
 
 @app.route("/commanders/create", methods=["GET","POST"])
 @login_required
-# @roles_required('admin', 'commissioner')
+@roles_accepted('admin', 'commissioner')
 def create_commanders():
     if request.method == 'POST':
         comm_str = request.form.get("commlist").strip()
@@ -193,10 +170,11 @@ def users():
                 error = 'User ID incorrect or invalid, please contact admin. '
                 return render_template('users.html', error=error)
             elif do_update:
-                flash(f'Username successfully updated to {usn}')
+                flash(f'Username successfully updated to {usn}', 'success')
                 return redirect(url_for('home'))
             else:
-                error = "An error occurred while updating, please contact the admin. "
+                error = "An error occurred while updating, please contact" \
+                        " the admin. "
             return render_template('users.html', error=error)
         else:
             error = "Security check failed. "
@@ -204,44 +182,163 @@ def users():
     else:
         return render_template('users.html')
 
-@app.route("/register", methods=["GET","POST"])
-@login_required
-def register():
-    lnames = ['huey','lovin','strzegowski']
+
+@app.route("/log_game", methods=["GET", "POST"])
+@roles_accepted('admin', 'commissioner', 'scorekeeper')
+def log_game():
     if request.method == 'POST':
-        """
-        Not currently in use for this iteration
-        fname = request.form['fname']
-        email = request.form['email']
-        """
-        lname = request.form['lname'].lower()
-        usn = request.form['username']
-        if len(usn) > 30:
-            error = 'Username must be less than 30 characters. '
-            return render_template('registration.html', error=error)
-        sec = request.form['security'].lower()
+        # Game Scores will be stored in the DB
+        game_score = []
 
-        if sec == 'juggernaut2117' and lname in lnames:
-            do_ins = UserService().create(usn)
-            if do_ins == 'exists':
-                flash('User already exists! ')
-                return redirect(url_for('home'))
-            elif do_ins:
-                flash(f'User "{usn}" successfully created! ')
-                return redirect(url_for('home'))
+        # map usernames to userids
+        un_to_uid = {}
+        pairs = ScoringService().get_uid_username_pairs()
+        for row in pairs:
+            un_to_uid[row[1]] = row[0]
+
+        game_num_to_id = {}
+        game_pairs = ScoringService().get_game_num_id()
+        for row in game_pairs:
+            game_num_to_id[row[1]] = row[0]
+
+        # raw scoring template
+        player_scores = {
+            "user_id": 0,
+            "game_id": 0,
+            "username": '',
+            "place": 0,
+            "pts_total": 0,
+            "first_blood": False,
+            "commcast": False,
+            "commfourplus": False,
+            "save": 0,
+            "commkill": False,
+            "attlast": False,
+            "killall": False,
+            "popvote": False
+        }
+
+        # pts by placement
+        # place_scores = {1: 4, 2: 3, 3: 2, 4: 1}
+
+        # copy the scoring template
+        p_one = copy.deepcopy(player_scores)
+        p_two = copy.deepcopy(player_scores)
+        p_three = copy.deepcopy(player_scores)
+        p_four = copy.deepcopy(player_scores)
+
+        # Fill player dictionaries and append to games list
+        player_dict = {"p_one": "p1", "p_two": "p2", "p_three": "p3",
+                       "p_four": "p4"}
+        for k in player_dict:
+            prefix = player_dict[k]
+            if k == 'p_one':
+                pdict = p_one
+            elif k == 'p_two':
+                pdict = p_two
+            elif k == 'p_three':
+                pdict = p_three
+            elif k == 'p_four':
+                pdict = p_four
             else:
-                error = 'User creation failed. Contact the admin. '
-        else:
-            error = 'Security check failed'
+                pass
 
-        return render_template('registration.html', error=error)
+            pdict['username'] = request.form[f'{prefix}_username']
+            pdict['user_id'] = un_to_uid[pdict['username']]
+            pdict['game_id'] = game_num_to_id[int(request.form['game_num'])]
+
+            if request.form[f'{prefix}_place'] == 'first':
+                pdict['place'] = 1
+                pdict['pts_total'] += 4
+            elif request.form[f'{prefix}_place'] == 'second':
+                pdict['place'] = 2
+                pdict['pts_total'] += 3
+            elif request.form[f'{prefix}_place'] == 'third':
+                pdict['place'] = 3
+                pdict['pts_total'] += 2
+            elif request.form[f'{prefix}_place'] == 'fourth':
+                pdict['place'] = 4
+                pdict['pts_total'] += 1
+
+            if request.form.get(f'{prefix}_firstblood', False):
+                pdict['first_blood'] = True
+                pdict['pts_total'] += 1
+
+            if request.form.get(f'{prefix}_commcast', False):
+                pdict['commcast'] = True
+
+            if not pdict['commcast']:
+                pdict['pts_total'] -= 1
+
+            if request.form.get(f'{prefix}_commplus', False):
+                pdict['commfourplus'] = True
+                pdict['pts_total'] += 1
+
+            if request.form[f'{prefix}_save'] == 'one':
+                pdict['save'] = 1
+                pdict['pts_total'] += 1
+            elif request.form[f'{prefix}_save'] == 'two':
+                pdict['save'] = 2
+                pdict['pts_total'] += 2
+            elif request.form[f'{prefix}_save'] == 'three':
+                pdict['save'] = 3
+                pdict['pts_total'] += 3
+
+            if request.form.get(f'{prefix}_commkill', False):
+                pdict['commkill'] = True
+                pdict['pts_total'] += 1
+
+            if request.form.get(f'{prefix}_attlast', False):
+                pdict['attlast'] = True
+                pdict['pts_total'] -= 1
+
+            if request.form.get(f'{prefix}_killall', False):
+                pdict['killall'] = True
+                pdict['pts_total'] -= 1
+
+            if request.form.get(f'{prefix}_popvote', False):
+                pdict['popvote'] = True
+                pdict['pts_total'] += 1
+
+            game_score.append(pdict)
+
+        if len(game_score) == len(player_dict):
+            num_scores = len(game_score)
+            flash(f'Scores recorded for {num_scores} players. ', 'success')
+
+        for score in game_score:
+            uid = score['user_id']
+            username = score['username']
+            game_id = score['game_id']
+            pts_total = score['pts_total']
+
+            # add game_id
+            insert = ScoringService().add_scores(uid, game_id, pts_total,
+                                                 score)
+            if insert:
+                flash(f'New score row successfully inserted for user: '
+                      f'{username}.', 'success')
+            else:
+                flash(f'Something went wrong insert row for {username}, '
+                      f'contact an admin.', 'danger')
+
+        us = update_standings()
+        if us:
+            flash('Standings updated.')
+
+        return render_template('log_game.html')
     else:
-        return render_template('security/register_user.html')
+        return render_template('log_game.html')
 
 
-@app.route("/resetpw", methods=["GET","POST"])
-def reset_password():
-    return render_template('security/reset_password.html')
+@app.route('/rules', methods=['GET'])
+def rules():
+    # Page Includes:
+    # Full Breakdown of Last Game
+    # Current Season by Game
+    # Scoring Ruleset Breakdown
+    return render_template('rules.html')
+
 
 if __name__ == "__main__":
     app.run()

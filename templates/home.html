@@ -8,10 +8,31 @@
     {% extends "layout.html" %}
     {% block content %}
         <div class="home">
-            <h1>Welcome Planeswalker!</h1>
-            <p class="welcome-text">Use the menu in the top right to navigate around the site. <br> To draft your commander, select the "Draft"
-            menu option. <br> To view all available commanders, select the "Commanders" menu option. <br> Otherwise, there is
-            literally no other reason to be on this site right now.</p>
+            <div id="welcome-header">
+                <img class="mtg-m-logo" src="/static/assets/mtg_m_logo.png" alt="logo">
+                <h1>Welcome Planeswalker!</h1>
+                <img class="mtg-m-logo" src="/static/assets/mtg_m_logo.png" alt="logo">
+            </div>
+            <h2 style="margin-bottom: 10px;">Home of the Fluffy Bunny EDH League</h2>
+            {% if current_user.is_anonymous %}
+            <p class="welcome-text">You will need to register before you can access most site functionality.</p>
+            {% endif %}
+            <p class="welcome-text">Use the menu in the top right to navigate around the site.</p>
+            <p class="welcome-text">To learn more about us, check out our About section.</p>
+            <p class="welcome-text">To view all available commanders, select the "Commanders" menu option (in progress).</p>
+            <div class="separator"></div>
+            <p class="welcome-text">Check out these links to learn more about the format or some of our favorite content creators:</p>
+            <ul class="scoring" style="margin-top: 10px; width: 400px;">
+                <li>What is&nbsp;<a href="https://mtg.gamepedia.com/Magic:_The_Gathering" target="_blank">Magic: the
+                    Gathering</a>.</li>
+                <li>What is&nbsp;<a href="https://mtg.gamepedia.com/Commander_(format)" target="_blank">EDH/Commander</a></li>
+                <li>Who should I check out to learn more about getting started: </li>
+                <ul class="scoring" style="list-style-type: circle;">
+                    <li><a href="https://www.youtube.com/channel/UCLsiaNUb42gRAP7ewbJ0ecQ" target="_blank">The Command Zone</a></li>
+                    <li><a href="https://www.youtube.com/channel/UC-w5MNByr4SNy3z2232sj0g" target="_blank">The Commander's Quarters</a></li>
+                    <li><a href="https://www.youtube.com/channel/UC7-hR5EfgpM6oHfiGDkxfMA" target="_blank">Tolarian Community College</a></li>
+                </ul>
+            </ul>
         </div>
     {% endblock %}
 </body>

@@ -4,11 +4,12 @@ import random
 from database import Base
 from flask_security import UserMixin, RoleMixin, current_user, utils
 from flask_security.forms import PasswordField
-from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import Boolean, DateTime, Column, Integer, String, ForeignKey
+from sqlalchemy import Boolean, DateTime, Column, Integer, String, \
+    ForeignKey, JSON, Date, PrimaryKeyConstraint
 from flask_admin.contrib import sqla
 from flask import redirect, url_for
+import json
 
 
 test = False
@@ -50,12 +51,6 @@ class User(Base, UserMixin):
     roles = relationship('Roles', secondary='admin.roles_users',
                          backref=backref('admin.users', lazy='dynamic'))
 
-    def set_password(self, password):
-        self.password = utils.hash_password(password)
-
-    def check_password(self, password):
-        return utils.verify_password(password, self.password)
-
 
 class UserCommander(Base):
     __tablename__ = 'user_commander'
@@ -75,11 +70,66 @@ class Commander(Base):
     image_link = Column(String(255))
     scryfall_id = Column(String(64))
 
+
 class DraftCommander(Base):
     __tablename__ = 'draft_commander'
     __table_args__ = ({"schema": "admin"})
     id = Column(Integer(), primary_key=True)
     commander_id = Column('commander_id', Integer(), ForeignKey('admin.commanders.id'))
+
+
+class RptStandings(Base):
+    __tablename__ = 'rpt_standings'
+    __table_args__ = ({"schema": "admin"})
+    user_id = Column('user_id', Integer(), ForeignKey('admin.users.id'), primary_key=True)
+    pts_total = Column(Integer())
+    place_last_game = Column(Integer())
+    pts_last_game = Column(Integer())
+
+
+class RptCurrSeasonByGame(Base):
+    __tablename__ = 'rpt_curr_season_by_game'
+    __table_args__ = ({"schema": "admin"})
+    user_id = Column(Integer(), primary_key=True)
+    games = Column(JSON)
+    first_bloods = Column(Integer())
+    first_places = Column(Integer())
+    second_places = Column(Integer())
+    third_places = Column(Integer())
+    fourth_places = Column(Integer())
+
+
+class GamesScores(Base):
+    __tablename__ = 'games_scores'
+    __table_args__ = (PrimaryKeyConstraint('user_id', 'game_id'),
+                      {"schema": "admin"})
+    user_id = Column('user_id', Integer(), ForeignKey('admin.users.id'))
+    game_id = Column('game_id', Integer(), ForeignKey('admin.games.id'))
+    pts_total = Column(Integer())
+    scores = Column(JSON())
+
+
+class Games(Base):
+    __tablename__ = 'games'
+    __table_args__ = ({"schema": "admin"})
+    id = Column(Integer(), primary_key=True)
+    season_id = Column('season_id', Integer(), ForeignKey('admin.seasons.id'))
+    game_num = Column(Integer())
+    budget = Column(Integer())
+    flex = Column(Boolean)
+    theme = Column(String(255))
+    date = Column(Date())
+
+
+class Seasons(Base):
+    __tablename__ = 'seasons'
+    __table_args__ = ({"schema": "admin"})
+    id = Column(Integer(), primary_key=True)
+    name = Column(String(255))
+    start_date = Column(Date())
+    num_games = Column(Integer())
+    is_current = Column(Boolean())
+    winner_user_id = Column(Integer())
 
 
 class UserAdmin(sqla.ModelView):
@@ -274,8 +324,8 @@ class UserDraftingModel:
     def check_usercomm(self, uid):
         query = f'SELECT c.name ' \
                 f'FROM admin.user_commander uc ' \
-                f'LEFT JOIN admin.draft_commanders c ' \
-                f'ON uc.commander_id = c.commander_id ' \
+                f'LEFT JOIN admin.commanders c ' \
+                f'ON uc.commander_id = c.id ' \
                 f'WHERE uc.user_id = %s ' \
                 f'AND uc.commander_id IS NOT NULL'
 
@@ -317,3 +367,215 @@ class UserDraftingModel:
             return commander[1]
         else:
             return False
+
+
+class ScoringModel:
+    def __init__(self):
+        if test:
+            self.conn = psycopg2.connect(testdb_url)
+        else:
+            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.cur = self.conn.cursor()
+
+    def __del__(self):
+        self.conn.commit()
+        self.conn.close()
+        self.cur.close()
+
+    def get_uid_username_pairs(self):
+        query = """
+        SELECT id, username
+        FROM admin.users
+        WHERE active = True
+        ;
+        """
+        self.cur.execute(query)
+        results = self.cur.fetchall()
+        return results
+
+    def add_scores(self, uid, game_id, pts_total, score):
+
+        def check_scores(uid, game_id):
+            query = f"SELECT * FROM admin.games_scores " \
+                f"WHERE user_id = {uid} " \
+                f"AND game_id = {game_id};"
+
+            self.cur.execute(query)
+            results = self.cur.fetchone
+            if results:
+                return True
+            else:
+                return False
+
+        score = json.dumps(score)
+
+        query = f"INSERT INTO admin.games_scores " \
+                f"(user_id, game_id, pts_total, scores) " \
+                f"VALUES ({uid}, {game_id}, {pts_total}, '{score}') " \
+                f"ON CONFLICT (user_id, game_id) " \
+                f"DO UPDATE " \
+                f"SET pts_total = EXCLUDED.pts_total, " \
+                f"scores = EXCLUDED.scores; "
+
+        self.cur.execute(query)
+        check = check_scores(uid, game_id)
+
+        if check:
+            return True
+        else:
+            return False
+
+    def get_game_num_id(self):
+        query = """
+                SELECT g.id, g.game_num
+                FROM admin.games g
+                JOIN admin.seasons s
+                    ON g.season_id = s.id
+                WHERE s.is_current = True
+                ;
+                """
+        self.cur.execute(query)
+        results = self.cur.fetchall()
+        return results
+
+    def get_standings(self):
+        query = """
+        SELECT u.username,
+                u.first_name,
+                r.pts_total,
+                r.place_last_game,
+                r.pts_last_game
+        FROM admin.rpt_standings r
+        LEFT JOIN admin.users u
+            ON r.user_id = u.id
+        WHERE u.id IS NOT NULL
+            AND u.active = True
+        ORDER BY r.pts_total DESC
+        ;
+        """
+
+        self.cur.execute(query)
+        standings = self.cur.fetchall()
+        return standings
+
+    def rebuild_standings(self):
+        create_standings_backup = """
+        CREATE TABLE IF NOT EXISTS admin.tmp_standings_backup 
+        (LIKE admin.rpt_standings)
+        ;
+        """
+
+        cleanup_backup = "DELETE FROM admin.tmp_standings_backup;"
+        update_backup = """
+        INSERT INTO admin.tmp_standings_backup
+        SELECT * FROM admin.rpt_standings
+        ;"""
+
+        rebuild_standings = """
+        WITH cte_curr (game_id) AS
+        (SELECT g.id
+        FROM admin.games g
+        JOIN admin.seasons s
+            ON g.season_id = s.id
+        WHERE s.is_current = True),
+        cte_mr (mr_game_id) AS
+        (SELECT max(game_id) as mr_game_id
+        FROM admin.games_scores)
+        INSERT INTO admin.rpt_standings (user_id, pts_total, place_last_game, pts_last_game)
+        SELECT curr.user_id,
+                curr.pts_total,
+                mr.place_last_game,
+                mr.pts_last_game
+        FROM (SELECT gs.user_id,
+                    sum(gs.pts_total) AS pts_total
+            FROM admin.games_scores gs
+            LEFT JOIN cte_curr c
+                ON gs.game_id = c.game_id
+            WHERE c.game_id IS NOT NULL
+            GROUP BY gs.user_id
+            ) as curr
+        JOIN (SELECT gs.user_id,
+                    gs.pts_total as pts_last_game,
+                    (gs.scores->>'place')::INT as place_last_game
+            FROM admin.games_scores gs
+            LEFT JOIN cte_mr cm
+                ON gs.game_id = cm.mr_game_id
+            WHERE cm.mr_game_id IS NOT NULL
+            ) as mr
+            ON curr.user_id = mr.user_id
+        WHERE mr.user_id IS NOT NULL
+        ON CONFLICT (user_id) 
+        DO UPDATE 
+        SET pts_total = EXCLUDED.pts_total,
+            place_last_game = EXCLUDED.place_last_game,
+            pts_last_game = EXCLUDED.pts_last_game
+        ;       
+        """
+
+        self.cur.execute(create_standings_backup)
+        self.cur.execute(cleanup_backup)
+        self.cur.execute(update_backup)
+        self.cur.execute(rebuild_standings)
+
+        return True
+
+    def restore_standings(self):
+        cleanup_sql = "DELETE FROM admin.rpt_standings;"
+
+        restore_sql = """
+        INSERT INTO admin.rpt_standings
+        SELECT * 
+        FROM admin.tmp_standings_backup
+        ;
+        """
+
+        self.cur.execute(cleanup_sql)
+        self.cur.execute(restore_sql)
+
+
+class InfoModel:
+    def __init__(self):
+        if test:
+            self.conn = psycopg2.connect(testdb_url)
+        else:
+            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.cur = self.conn.cursor()
+
+    def __del__(self):
+        self.conn.commit()
+        self.conn.close()
+        self.cur.close()
+
+    def get_curr_season_info(self):
+        query = """
+        SELECT s.name,
+                count(DISTINCT g.id) as games_total,
+                count(DISTINCT gs.game_id) as games_played
+        FROM admin.seasons s
+        JOIN admin.games g
+            ON s.id = g.season_id
+        LEFT JOIN admin.games_scores gs
+            ON g.id = gs.game_id
+        WHERE s.is_current = True
+            AND g.id IS NOT NULL
+        GROUP BY s.name
+        ;"""
+
+        self.cur.execute(query)
+        results = self.cur.fetchone()
+        return results
+
+    def get_games_info(self):
+        query = """
+        SELECT g.game_num,
+                g.theme,
+                g.budget
+        FROM admin.games g
+        JOIN admin.seasons s
+            on g.season_id = s.id
+        WHERE s.is_current = True
+        ;"""
+
+        self.cur.execute(query)
+        results = self.cur.fetchall()
+        return results
