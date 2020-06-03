@@ -66,9 +66,14 @@ class Commander(Base):
     id = Column(Integer(), primary_key=True)
     name = Column(String(255), unique=True)
     color_identity = Column(String(9))
+    cmc = Column(Integer())
+    type_line = Column(string(255))
+    is_partner = Column(Boolean)
     link = Column(String(255))
     image_link = Column(String(255))
     scryfall_id = Column(String(64))
+    mtg_set = Column(String(9))
+    set_name = Column(String(255))
 
 
 class DraftCommander(Base):
