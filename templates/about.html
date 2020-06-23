@@ -57,16 +57,15 @@
                 {% endif %}
             </div>
             {% if curr_champ %}
-            <div class="separator"></div>
             <div id="curr-champ">
                 <h2>Reigning Champion</h2>
                 {% if current_user.has_role('admin') or
                     current_user.has_role('commissioner') or
                     current_user.has_role('scorekeeper') or
                     current_user.has_role('player') %}
-                <h3>{{ curr_champ.season_name }} - {{ curr_champ.name }}</h3>
+                <p>{{ curr_champ.season_name }} - {{ curr_champ.name }}</p>
                 {% else %}
-                <h3>{{ curr_champ.season_name }} - {{ curr_champ.username }}</h3>
+                <p>{{ curr_champ.season_name }} - {{ curr_champ.username }}</p>
                 {% endif %}
             </div>
             {% endif %}
