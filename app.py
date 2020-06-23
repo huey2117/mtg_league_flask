@@ -336,9 +336,13 @@ def rules():
 @app.route('/season_admin', methods=['GET','POST'])
 @roles_accepted('admin','commissioner')
 def season_admin():
+    next_season_name = None
+    curr_season_name = None
     season_info = AdminService().get_season_info()
-    curr_season_name = season_info[1]
-    next_season_name = season_info[3]
+    if season_info[1]:
+        curr_season_name = season_info[1]
+    if season_info[3]:
+        next_season_name = season_info[3]
 
     return render_template('season_admin.html', next_season=next_season_name,
                            curr_season=curr_season_name)
