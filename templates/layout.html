@@ -29,8 +29,20 @@
                     <li>{% if current_user.has_role('admin')
                             or current_user.has_role('commissioner')
                             or current_user.has_role('scorekeeper') %}
-                        <a href="{{url_for('log_game') }}" class="menu-item">Log Game</a>
-                        {% endif %}</li>
+                        <div class="dropdown">
+                            <a class="dropdown-btn">Admin<i class="fa fa-caret-down"></i></a>
+                            <div class="dropdown-content">
+                                <a href="{{ url_for('log_game') }}">Log Game</a>
+                                <a href="{{ url_for('log_decks') }}">Log Deck</a>
+                                {% if current_user.has_role('admin') or current_user.has_role('commissioner') %}
+                                <a href="{{ url_for('season_admin') }}">Season Admin</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <a href=" {{url_for('log_decks') }}">Log Deck</a>
+                        {% endif %}
+                    </li>
                     <li>{% if current_user.is_anonymous %}
                         <a href="{{ url_for_security('login') }}" class="menu-item">Login</a>
                         {% else %}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Season Admin</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var now = new Date();
+            var month = (now.getMonth() + 1);
+            var day = now.getDate();
+            if (month < 10)
+                month = "0" + month;
+            if (day < 10)
+                day = "0" + day;
+            var today = now.getFullYear() + '-' + month + '-' + day;
+            $('#start-date').val(today);
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $(".collapsible").click(function() {
+                $coll = $(this)
+                this.classList.toggle("active")
+                $content = $coll.next();
+                $content.slideToggle("fast")
+            });
+        });
+    </script>
+</head>
+<body>
+    {% extends "layout.html" %}
+    {% block content %}
+        {% if error %}
+            <p class="error"><strong>Error:</strong> {{ error }}</p>
+        {% endif %}
+        <div class="season-admin" id="season-admin">
+            <button type="button" class="collapsible">Create Season</button>
+            <div class="content">
+                <form id="create-season" class="season-admin-form" action="/create_season" method="post">
+                    <div id="create-season-form-header" class="sa-form-content">
+                        <label for="season-name">Season Name</label>
+                        <label for="num-games">Num of Games</label>
+                        <label for="start-date">Start Date</label>
+                    </div>
+                    <div id="create-season-form" class="sa-form-content">
+                        <input id="season-name" name="season-name" type="text" required placeholder="Season 0">
+                        <input id="num-games" name="num-games" type="number" placeholder="10">
+                        <input id="start-date" name="start-date" type="date">
+                    </div>
+                    <div class="season-admin-subbtn">
+                        <input id="create-season-submit" type="submit"/>
+                    </div>
+                </form>
+            </div>
+            <button type="button" class="collapsible">Start/End Season</button>
+            <div class="content">
+                <form id="start-end-season" class="season-admin-form">
+                    {% if next_season %}
+                    <label for="season-start-button">Next Season is:<br> <b> {{ next_season }} </b> </label>
+                    <div class="season-admin-subbtn">
+                        <input type="submit" id="season-start-button" value="Start Next Season">
+                    </div>
+                    {% else %}
+                    <p>Next Season not yet created. </p>
+                    {% endif %}
+                    {% if curr_season %}
+                    <label for="season-end-button">Current Season is:<br><b> {{ curr_season }} </b></label>
+                    <div class="season-admin-subbtn">
+                        <input type="submit" id="season-end-button" value="End Current Season"/>
+                    </div>
+                    {% else %}
+                    <p>No active seasons found. </p>
+                    {% endif %}
+                </form>
+            </div>
+            <button type="button" class="collapsible">Add Games to Season</button>
+            <div class="content">
+                <form id="add-games" class="season-admin-form" action="/add_games" method="post">
+                    <div id="add-games-div" class="sa-form-content">
+                        <label id="add-season-games-label" for="add-season-games">Season Number: </label>
+                        <input id="add-season-games" name="add-season-games" type="number" required>
+                        <label id="games-list-label" for="games-list">Game info should be comma separated with each game being on a separate
+                            line. <br>
+                            <b><i>Order: Game Number, Budget (no $), Flex (yes/no), Theme</i></b></label>
+                        <textarea id="games-list" name="games-list" required placeholder="1, 150, yes, Some Theme"></textarea>
+                    </div>
+                    <div class="season-admin-subbtn">
+                        <input type="submit" id="add-games-button" value="Add Games"/>
+                    </div>
+                </form>
+            </div>
+            <button type="button" class="collapsible">Force Standings Rebuild</button>
+            <div class="content">
+                <form id="refresh-standings" name="refresh-standings" class="season-admin-form">
+                    <label id="sanity-check-label" for="sanity-check">Are you 100% sure?</label>
+                    <div class="season-admin-subbtn">
+                        <input type="submit" id="sanity-check" value="Yes"/>
+                    </div>
+                </form>
+            </div>
+            <div class="season-admin-return">
+                <strong>
+                    {{ message }}
+                </strong>
+            </div>
+        </div>
+    {% endblock %}
+</body>
+</html>

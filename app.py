@@ -3,7 +3,7 @@ import json
 from flask import Flask, request, jsonify, render_template, redirect, \
     url_for, flash
 from service import CommanderService, DraftingService, UserService, \
-    ScoringService, InfoService
+    ScoringService, InfoService, AdminService
 from pgmodels import User, Roles, UserAdmin, RoleAdmin
 from flask_security import Security, SQLAlchemySessionUserDatastore, \
     login_required, utils, \
@@ -42,15 +42,6 @@ mail = Mail(app)
 @app.before_first_request
 def before_first_request():
     init_db()
-# user_datastore.find_or_create_role(name='admin',
-#                                    description='Administrator')
-# user_datastore.find_or_create_role(name='commissioner',
-#                                    description='League Commissioner')
-# user_datastore.find_or_create_role(name='player',
-#                                    description='League Participant')
-# user_datastore.find_or_create_role(name='scorekeeper',
-#                                    description='Designated Scorekeeper')
-# db_session.commit()
 
 
 # Initialize Flask-Admin
@@ -218,9 +209,6 @@ def log_game():
             "popvote": False
         }
 
-        # pts by placement
-        # place_scores = {1: 4, 2: 3, 3: 2, 4: 1}
-
         # copy the scoring template
         p_one = copy.deepcopy(player_scores)
         p_two = copy.deepcopy(player_scores)
@@ -245,7 +233,12 @@ def log_game():
 
             pdict['username'] = request.form[f'{prefix}_username']
             pdict['user_id'] = un_to_uid[pdict['username']]
-            pdict['game_id'] = game_num_to_id[int(request.form['game_num'])]
+            try:
+                pdict['game_id'] = game_num_to_id[int(request.form['game_num'])]
+            except KeyError:
+                flash(f"Game number {request.form['game_num']} does not exist. "
+                      f"Not logging scores for this match...", 'danger')
+                return render_template('log_game.html')
 
             if request.form[f'{prefix}_place'] == 'first':
                 pdict['place'] = 1
@@ -338,6 +331,89 @@ def rules():
     # Current Season by Game
     # Scoring Ruleset Breakdown
     return render_template('rules.html')
+
+
+@app.route('/season_admin', methods=['GET','POST'])
+@roles_accepted('admin','commissioner')
+def season_admin():
+    season_info = AdminService().get_season_info()
+    curr_season_name = season_info[1]
+    next_season_name = season_info[3]
+
+    return render_template('season_admin.html', next_season=next_season_name,
+                           curr_season=curr_season_name)
+
+
+@app.route('/create_season', methods=['POST'])
+@roles_accepted('admin', 'commissioner')
+def create_season():
+    # redirects from create season form in season_admin
+    params = {"season-name": request.form['season-name'],
+              "num-games": int(request.form['num-games']),
+              "start-date": request.form['start-date']
+              }
+
+    create = AdminService().create_season(params)
+    if create:
+        fmsg = f"{params['season-name']} created. "
+        state = 'success'
+    else:
+        fmsg = f"{params['season-name']} either already exists " \
+            "or failed to create. "
+        state = 'danger'
+    flash(fmsg, state)
+    return redirect(url_for('season_admin'))
+
+
+@app.route('/add_games', methods=['POST'])
+@roles_accepted('admin', 'commissioner')
+def add_games_to_season():
+    # redirects from add games form in season_admin
+    season_number = request.form['add-season-games'].strip().lower()
+    season_name = f'Season {season_number}'
+
+    games = []
+    gl = request.form['games-list'].strip().split('\r\n')
+    for line in gl:
+        line = line.split(',')
+        flex = False
+        if line[2].lower().strip() == 'yes':
+            flex = True
+        game = {
+            "game_num": int(line[0].strip()),
+            "budget": int(line[1].strip()),
+            "flex": flex,
+            "theme": line[3].strip()
+        }
+        games.append(game)
+
+    num_games = len(games)
+    params = {"season_name": season_name,
+              "games": games
+              }
+
+    add = AdminService().add_games_to_season(params)
+    if add == num_games:
+        fmsg = f'{num_games} games added to {season_name}. '
+        state = 'success'
+    elif add != num_games:
+        fmsg = f'Partial success. Only added {add} to {season_name}. '
+        state = 'warning'
+    else:
+        fmsg = 'Failed to add games. '
+        state = 'danger'
+
+    flash(fmsg, state)
+    return redirect(url_for('season_admin'))
+
+
+@app.route('/log_decks', methods=['GET', 'POST'])
+@roles_accepted('admin', 'commissioner', 'scorekeeper')
+def log_decks():
+    # Page Includes:
+    # Logging Decks by User/Game
+    # Anything else?
+    return render_template('log_decks.html')
 
 
 if __name__ == "__main__":

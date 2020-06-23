@@ -69,6 +69,16 @@ div.gamelog {
           border-radius: 6px; */
 }
 
+#season-admin {
+  padding: 30px 10px 30px 10px;
+  background-color: #E6E6FA;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 50px;
+  justify-content: center;
+}
+
 #gamelog-header{
     justify-content: center;
     display: flex;
@@ -280,6 +290,102 @@ h3 {
 
 .dropdown:hover .dropdown-content {
   display: block;
+}
+
+.collapsible {
+    background-color: #393f4d;
+    color: white;
+    cursor: pointer;
+    padding: 18px;
+    width: 60%;
+    border: 1px solid white;
+    border-radius: 50px;
+    text-align: center;
+    outline: none;
+    font-size: 16px;
+}
+
+.active, .collapsible:hover {
+    background-color: #393f4d;
+    color: crimson;
+    box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+
+.content {
+    padding: 5px 18px;
+    display: none;
+    background-color: #E6E6FA;
+}
+
+.season-admin-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#start-end-season {
+    width: 600px;
+}
+
+.sa-form-content {
+    width: 600px;
+}
+
+.sa-form-content label, .sa-form-content input {
+    width: 30%;
+    text-align: center;
+    margin: 0;
+}
+
+.sa-form-content label, #sanity-check-label {
+    margin-top: 15px;
+}
+
+#start-end-season label {
+    width: 200px;
+    text-align: center;
+    margin: 15px 0 0 0;
+    font-size: 18px;
+}
+
+.season-admin-subbtn {
+    margin-top: 10px;
+}
+
+#add-games-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#add-season-games {
+    margin-top: 10px;
+}
+
+#games-list-label {
+    width: 600px;
+    margin: 15px 0;
+}
+
+#games-list {
+    width: 500px;
+    min-height: 100px;
+}
+
+.sa-form-content input {
+    height: 25px;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    border: 1px solid black;
+}
+
+#create-season-form-header {
+    margin-bottom: 5px;
+}
+
+#season-name {
+    margin: 0;
 }
 
 .menu li {

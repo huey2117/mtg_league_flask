@@ -6,7 +6,7 @@ from flask_security import UserMixin, RoleMixin, current_user, utils
 from flask_security.forms import PasswordField
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Boolean, DateTime, Column, Integer, String, \
-    ForeignKey, JSON, Date, PrimaryKeyConstraint
+    ForeignKey, JSON, Date, PrimaryKeyConstraint, UniqueConstraint
 from flask_admin.contrib import sqla
 from flask import redirect, url_for
 import json
@@ -15,6 +15,7 @@ import json
 test = False
 db_url = os.environ['DATABASE_URL']
 testdb_url = 'dbname=d8dndq07tlbq07 host=localhost port=5432 user=dbtest password=devdbtest'
+# testdb_url = db_url = os.environ['TESTDB_URL']
 
 
 class RolesUsers(Base):
@@ -116,7 +117,8 @@ class GamesScores(Base):
 
 class Games(Base):
     __tablename__ = 'games'
-    __table_args__ = ({"schema": "admin"})
+    __table_args__ = (UniqueConstraint('season_id', 'game_num'),
+                      {"schema": "admin"})
     id = Column(Integer(), primary_key=True)
     season_id = Column('season_id', Integer(), ForeignKey('admin.seasons.id'))
     game_num = Column(Integer())
@@ -133,7 +135,7 @@ class Seasons(Base):
     name = Column(String(255))
     start_date = Column(Date())
     num_games = Column(Integer())
-    is_current = Column(Boolean())
+    is_current = Column(Boolean(), default=False)
     winner_user_id = Column(Integer())
 
 
@@ -579,8 +581,131 @@ class InfoModel:
         JOIN admin.seasons s
             on g.season_id = s.id
         WHERE s.is_current = True
+        ORDER BY game_num ASC
         ;"""
 
         self.cur.execute(query)
         results = self.cur.fetchall()
         return results
+
+
+class AdminModel:
+    def __init__(self):
+        if test:
+            self.conn = psycopg2.connect(testdb_url)
+        else:
+            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.cur = self.conn.cursor()
+
+    def __del__(self):
+        self.conn.commit()
+        self.conn.close()
+        self.cur.close()
+
+    def create_season(self, params):
+
+        def check_insert(season_name):
+            check_query = f"SELECT * FROM admin.seasons " \
+                f"WHERE name = '{season_name}' ;"
+
+            self.cur.execute(check_query)
+            results = self.cur.fetchone()
+
+            if results:
+                return True
+            else:
+                return False
+
+        query = """
+        INSERT INTO admin.seasons (name, num_games, start_date)
+        VALUES (%(season-name)s, %(num-games)s, %(start-date)s)
+        ;
+        """
+
+        season_name = params['season-name']
+        pre_check = check_insert(season_name)
+        if not pre_check:
+            self.cur.execute(query, params)
+            check = check_insert(season_name)
+            if check:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def add_games_to_season(self, params):
+
+        def check_games(season_id):
+            check_query = """
+            SELECT count(*)
+            FROM admin.games
+            WHERE season_id = %(season_id)s
+            ;
+            """
+            self.cur.execute(check_query, {"season_id": sid})
+            result = self.cur.fetchone()
+            if result:
+                return result[0]
+            else:
+                return False
+        season_name = params['season_name']
+        games = params['games']
+
+        sid_query = """
+        SELECT id
+        FROM admin.seasons
+        WHERE name = %(season_name)s
+        ;
+        """
+        sid_params = {"season_name": season_name}
+        self.cur.execute(sid_query, sid_params)
+        res = self.cur.fetchone()
+        if res:
+            sid = res[0]
+        else:
+            return False
+
+        for game in games:
+            game['season_id'] = sid
+
+        query = """
+            INSERT INTO admin.games (season_id, game_num, budget, flex, theme)
+            VALUES (%(season_id)s, %(game_num)s, %(budget)s, %(flex)s, 
+            %(theme)s)
+            ON CONFLICT (season_id, game_num)
+            DO UPDATE
+            SET budget = EXCLUDED.budget,
+                flex = EXCLUDED.flex,
+                theme = EXCLUDED.theme
+            ;
+            """
+        self.cur.executemany(query, games)
+
+        return check_games(sid)
+
+    def get_season_info(self):
+        query = """
+        WITH cte_curr (curr_id, next_id) AS
+        (SELECT s.id AS curr_id,
+                s.id + 1 AS next_id
+        FROM ADMIN.seasons s
+        WHERE s.is_current = True)
+        SELECT c.curr_id AS curr_id,
+                s.name AS curr_name,
+                c.next_id AS next_id,
+                n.name AS next_name
+        FROM cte_curr c
+        JOIN ADMIN.seasons s 
+            ON c.curr_id = s.id 
+        JOIN ADMIN.seasons n 
+            ON c.next_id = n.id
+        ;
+        """
+
+        self.cur.execute(query)
+        results = self.cur.fetchone()
+        if results:
+            return results
+        else:
+            return False

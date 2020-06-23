@@ -1,5 +1,5 @@
 from pgmodels import CommandersModel, UserDraftingModel, UsersModel, \
-    ScoringModel, InfoModel
+    ScoringModel, InfoModel, AdminModel
 
 
 class CommanderService:
@@ -89,4 +89,21 @@ class InfoService:
 
     def get_games_info(self):
         response = self.model.get_games_info()
+        return response
+
+
+class AdminService:
+    def __init__(self):
+        self.model = AdminModel()
+
+    def create_season(self, params):
+        response = self.model.create_season(params)
+        return response
+
+    def add_games_to_season(self, params):
+        response = self.model.add_games_to_season(params)
+        return response
+
+    def get_season_info(self):
+        response = self.model.get_season_info()
         return response
