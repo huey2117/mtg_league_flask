@@ -91,6 +91,10 @@ class InfoService:
         response = self.model.get_games_info()
         return response
 
+    def get_curr_champ(self):
+        response = self.model.get_curr_champ()
+        return response
+
 
 class AdminService:
     def __init__(self):

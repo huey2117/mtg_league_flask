@@ -83,16 +83,22 @@ def about():
     games_info = InfoService().get_games_info()
     games = [{"num": game[0], "theme": game[1], "budget": game[2]}
              for game in games_info]
+    standings = None
     get_standings = ScoringService().get_standings()
     if get_standings:
         standings = [{"username": row[0], "name": row[1], "pts_total": row[2],
                   "place_last_game": row[3], "pts_last_game": row[4]}
                  for row in get_standings]
-    else:
-        standings = None
+
+    curr_champ = None
+    get_champ = InfoService().get_curr_champ()
+    if get_champ:
+        curr_champ = {"username": get_champ[0],
+                      "name": get_champ[1]}
 
     return render_template('about.html', snum=season_number, gp=games_played,
-                           gt=games_total, games=games, standings=standings)
+                           gt=games_total, games=games, standings=standings,
+                           curr_champ=curr_champ)
 
 
 @app.route("/draft", methods=["GET", "POST"])

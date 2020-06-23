@@ -588,6 +588,29 @@ class InfoModel:
         results = self.cur.fetchall()
         return results
 
+    def get_curr_champ(self):
+        query = """
+        WITH cte_curr (prev_id) AS
+        (SELECT id - 1 AS prev_id
+        FROM ADMIN.seasons
+        WHERE is_current = True)
+        SELECT u.username,
+                u.first_name
+        FROM ADMIN.users u
+        JOIN ADMIN.seasons s
+            on u.id = s.winner_user_id
+        JOIN cte_curr c 
+            ON s.id = c.prev_id
+        WHERE s.winner_user_id IS NOT NULL
+        ;
+        """
+        self.cur.execute(query)
+        results = self.cur.fetchone()
+        if results:
+            return results
+        else:
+            return False
+
 
 class AdminModel:
     def __init__(self):
