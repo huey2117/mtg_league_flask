@@ -94,7 +94,8 @@ def about():
     get_champ = InfoService().get_curr_champ()
     if get_champ:
         curr_champ = {"username": get_champ[0],
-                      "name": get_champ[1]}
+                      "name": get_champ[1],
+                      "season_name": get_champ[2]}
 
     return render_template('about.html', snum=season_number, gp=games_played,
                            gt=games_total, games=games, standings=standings,

@@ -595,7 +595,8 @@ class InfoModel:
         FROM ADMIN.seasons
         WHERE is_current = True)
         SELECT u.username,
-                u.first_name
+                u.first_name,
+                s.name
         FROM ADMIN.users u
         JOIN ADMIN.seasons s
             on u.id = s.winner_user_id

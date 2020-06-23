@@ -64,9 +64,9 @@
                     current_user.has_role('commissioner') or
                     current_user.has_role('scorekeeper') or
                     current_user.has_role('player') %}
-                <h3>{{ curr_champ.name }}</h3>
+                <h3>{{ curr_champ.season_name }} - {{ curr_champ.name }}</h3>
                 {% else %}
-                <h3>{{ curr_champ.username }}</h3>
+                <h3>{{ curr_champ.season_name }} - {{ curr_champ.username }}</h3>
                 {% endif %}
             </div>
             {% endif %}
