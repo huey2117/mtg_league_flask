@@ -357,6 +357,11 @@ def create_season():
               "start-date": request.form['start-date']
               }
 
+    # Protecting myself from my own stupid data entry mistakes
+    if 'season' not in params['season-name'].lower()\
+            and len(params['season-name'] == 1):
+        params['season-name'] = f"Season {params['season-name']}"
+
     create = AdminService().create_season(params)
     if create:
         fmsg = f"{params['season-name']} created. "
