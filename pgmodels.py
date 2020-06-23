@@ -698,7 +698,7 @@ class AdminModel:
         FROM cte_curr c
         JOIN ADMIN.seasons s 
             ON c.curr_id = s.id 
-        JOIN ADMIN.seasons n 
+        LEFT JOIN ADMIN.seasons n 
             ON c.next_id = n.id
         ;
         """
