@@ -12,10 +12,9 @@ from flask import redirect, url_for
 import json
 
 
-test = False
+test = True
 db_url = os.environ['DATABASE_URL']
-testdb_url = 'dbname=d8dndq07tlbq07 host=localhost port=5432 user=dbtest password=devdbtest'
-# testdb_url = db_url = os.environ['TESTDB_URL']
+testdb_url = os.environ['TESTDB_URL']
 
 
 class RolesUsers(Base):
@@ -733,3 +732,50 @@ class AdminModel:
             return results
         else:
             return False
+
+    def start_season(self):
+        season_info = self.get_season_info()
+        if season_info[3]:
+            new_active_id = season_info[2]
+            old_active_id = season_info[0]
+
+            # Check for games in the new season
+            check_query = """
+            SELECT count(*)
+            FROM admin.games
+            WHERE season_id = %(season_id)s
+            ;
+            """
+            self.cur.execute(check_query, {"season_id": new_active_id})
+            result = self.cur.fetchone()
+            if not result:
+                return False
+            elif result[0] == 0:
+                return False
+            else:
+                deactivate_query = """
+                            WITH cte_winner (winner_user_id) AS
+                            (SELECT user_id
+                            FROM admin.rpt_standings
+                            ORDER BY pts_total DESC
+                            LIMIT 1)
+                            UPDATE admin.seasons s
+                            SET is_current = False,
+                                winner_user_id = c.winner_user_id
+                            FROM cte_winner c
+                            WHERE s.is_current = True
+                                AND s.id = %(sid)s
+                            ;
+                            """
+
+                self.cur.execute(deactivate_query, {"sid": old_active_id})
+
+                start_new_query = """
+                UPDATE admin.seasons
+                SET is_current = True
+                WHERE id = %(sid)s
+                ;
+                """
+
+                self.cur.execute(start_new_query, {"sid": new_active_id})
+                return True

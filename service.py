@@ -111,3 +111,7 @@ class AdminService:
     def get_season_info(self):
         response = self.model.get_season_info()
         return response
+
+    def start_season(self):
+        response = self.model.start_season()
+        return response

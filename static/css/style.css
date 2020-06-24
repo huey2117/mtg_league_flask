@@ -82,6 +82,7 @@ div.gamelog {
 #gamelog-header{
     justify-content: center;
     display: flex;
+    margin-bottom: 10px;
 }
 
 #log-header {
@@ -118,12 +119,17 @@ div.gamelog {
 
 .log-block {
     width: 10%;
-    margin-top: 10px;
+    margin: 10px 5px 10px 0;
 }
 
 .log-submit {
     display: flex;
     justify-content: center;
+    align-items: center;
+}
+
+#game-log-submit {
+    margin-left: 20px;
 }
 
 .mtg-m-logo {

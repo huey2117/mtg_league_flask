@@ -27,7 +27,7 @@ app.config.from_pyfile('config.py')
 """
 If DEBUG = True, set Test = True in pgmodel and database
 """
-app.config['DEBUG'] = False
+app.config['DEBUG'] = True
 
 # Initialize SQLA Datastore
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
@@ -346,10 +346,11 @@ def season_admin():
     next_season_name = None
     curr_season_name = None
     season_info = AdminService().get_season_info()
-    if season_info[1]:
+    try:
         curr_season_name = season_info[1]
-    if season_info[3]:
         next_season_name = season_info[3]
+    except:
+        flash('Cannot retrieve season info', 'danger')
 
     return render_template('season_admin.html', next_season=next_season_name,
                            curr_season=curr_season_name)
@@ -420,6 +421,23 @@ def add_games_to_season():
         state = 'danger'
 
     flash(fmsg, state)
+    return redirect(url_for('season_admin'))
+
+
+@app.route('/start_season', methods=['POST'])
+@roles_accepted('admin', 'commissioner')
+def start_season():
+    if request.method == 'POST':
+        # end season placeholder
+        new_season = AdminService().start_season()
+        if new_season:
+            fmsg = 'New Season Started'
+            state = 'success'
+        else:
+            fmsg = 'Season cannot be started! '
+            state = 'danger'
+
+        flash(fmsg, state)
     return redirect(url_for('season_admin'))
 
 

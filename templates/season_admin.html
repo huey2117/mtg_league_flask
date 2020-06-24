@@ -55,7 +55,12 @@
             </div>
             <button type="button" class="collapsible">Start/End Season</button>
             <div class="content">
-                <form id="start-end-season" class="season-admin-form">
+                <form id="start-end-season" class="season-admin-form" action="/start_season" method="post">
+                    {% if curr_season %}
+                    <label for="season-end-button">Current Season is:<br><b> {{ curr_season }} </b></label>
+                    {% else %}
+                    <p>No active seasons found. </p>
+                    {% endif %}
                     {% if next_season %}
                     <label for="season-start-button">Next Season is:<br> <b> {{ next_season }} </b> </label>
                     <div class="season-admin-subbtn">
@@ -63,14 +68,6 @@
                     </div>
                     {% else %}
                     <p>Next Season not yet created. </p>
-                    {% endif %}
-                    {% if curr_season %}
-                    <label for="season-end-button">Current Season is:<br><b> {{ curr_season }} </b></label>
-                    <div class="season-admin-subbtn">
-                        <input type="submit" id="season-end-button" value="End Current Season"/>
-                    </div>
-                    {% else %}
-                    <p>No active seasons found. </p>
                     {% endif %}
                 </form>
             </div>
