@@ -241,11 +241,14 @@ def log_game():
             pdict['username'] = request.form[f'{prefix}_username']
             pdict['user_id'] = un_to_uid[pdict['username']]
             try:
-                pdict['game_id'] = game_num_to_id[int(request.form['game_num'])]
+                game_id = game_num_to_id[int(request.form['game_num'])]
             except KeyError:
                 flash(f"Game number {request.form['game_num']} does not exist. "
                       f"Not logging scores for this match...", 'danger')
                 return render_template('log_game.html')
+
+            game_date = request.form['game_date']
+            pdict['game_id'] = game_id
 
             if request.form[f'{prefix}_place'] == 'first':
                 pdict['place'] = 1
@@ -322,9 +325,14 @@ def log_game():
                 flash(f'Something went wrong insert row for {username}, '
                       f'contact an admin.', 'danger')
 
+        # log date of game in games table
+        log_date = ScoringService().log_date(game_id, game_date)
+        if log_date:
+            print("Date updated for game. ")
+
         us = update_standings()
         if us:
-            flash('Standings updated.')
+            flash('Standings updated.', 'success')
 
         return render_template('log_game.html')
     else:

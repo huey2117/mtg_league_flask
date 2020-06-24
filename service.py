@@ -78,6 +78,10 @@ class ScoringService:
         response = self.model.restore_standings()
         return response
 
+    def log_date(self, game_id, game_date):
+        response = self.model.log_date(game_id, game_date)
+        return response
+
 
 class InfoService:
     def __init__(self):

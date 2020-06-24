@@ -538,6 +538,21 @@ class ScoringModel:
         self.cur.execute(cleanup_sql)
         self.cur.execute(restore_sql)
 
+    def log_date(self, game_id, game_date):
+        update = """
+        UPDATE admin.games
+        SET date = {gd}
+        WHERE id = {gid}
+        ;
+        """
+
+        params = {"gd": game_date,
+                  "gid": game_id
+                  }
+
+        self.cur.execute(update, params)
+        return True
+
 
 class InfoModel:
     def __init__(self):
