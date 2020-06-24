@@ -6,17 +6,10 @@ from sqlalchemy.ext.declarative import declarative_base
 
 test = False
 if test:
-    postgres = {
-        'user': 'dbtest',
-        'password': 'devdbtest',
-        'host': 'localhost',
-        'port': '5432',
-        'dbname': 'd8dndq07tlbq07'
-    }
-
-    db_url = f"postgresql://{postgres['user']}:{postgres['password']}@" \
-        f"{postgres['host']}:{postgres['port']}/{postgres['dbname']}"
-    # db_url = os.environ['TESTDB_URL']
+    try:
+        db_url = os.environ['TESTDB_URL']
+    except:
+        db_url = None
 else:
     db_url = os.environ['DATABASE_URL']
 

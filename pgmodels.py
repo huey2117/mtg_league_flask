@@ -14,7 +14,10 @@ import json
 
 test = False
 db_url = os.environ['DATABASE_URL']
-testdb_url = os.environ['TESTDB_URL']
+try:
+    testdb_url = os.environ['TESTDB_URL']
+except:
+    testdb_url = None
 
 
 class RolesUsers(Base):
