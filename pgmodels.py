@@ -459,7 +459,8 @@ class ScoringModel:
             ON r.user_id = u.id
         WHERE u.id IS NOT NULL
             AND u.active = True
-        ORDER BY r.pts_total DESC
+        ORDER BY r.pts_total DESC,
+            u.first_name ASC
         ;
         """
 

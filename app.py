@@ -441,6 +441,9 @@ def start_season():
         if new_season:
             fmsg = 'New Season Started'
             state = 'success'
+            us = update_standings()
+            if not us:
+                flash('Standings update failed', 'danger')
         else:
             fmsg = 'Season cannot be started! '
             state = 'danger'
