@@ -6,8 +6,7 @@ from service import CommanderService, DraftingService, UserService, \
     ScoringService, InfoService, AdminService
 from pgmodels import User, Roles, UserAdmin, RoleAdmin
 from flask_security import Security, SQLAlchemySessionUserDatastore, \
-    login_required, utils, \
-    current_user, roles_required, roles_accepted
+    login_required, utils, current_user, roles_required, roles_accepted
 from flask_security.forms import RegisterForm, Required, StringField, \
     PasswordField, LoginForm
 from database import db_session, init_db
@@ -127,7 +126,16 @@ def draft():
 @app.route("/commanders", methods=["GET"])
 @login_required
 def commanders():
-    return render_template('commanders.html')
+    comm_dicts = []
+    commdb = CommanderService().comm_page_view()
+    for row in commdb:
+        d = {
+            "name": row[0],
+            "image": row[1],
+            "link": row[2]
+        }
+        comm_dicts.append(d)
+    return render_template('commanders.html', commanders=comm_dicts)
 
 
 @app.route("/commanders/create", methods=["GET","POST"])

@@ -91,6 +91,23 @@ div.gamelog {
     justify-content: center;
 }
 
+#commanders-table {
+    width: 1200px;
+    border-spacing: 0 10px;
+}
+
+.comm-table-col {
+    max-width: 200px;
+    height: auto;
+    padding: 0px;
+    margin: 0px 20px;
+}
+
+.comm-image {
+    max-width: 200px;
+    height: auto;
+}
+
 .glheader {
     display: flex;
     flex-direction: row;

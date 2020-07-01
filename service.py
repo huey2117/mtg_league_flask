@@ -16,6 +16,10 @@ class CommanderService:
         response = self.model.select()
         return response
 
+    def comm_page_view(self):
+        response = self.model.comm_page_view()
+        return response
+
 
 class DraftingService:
     def __init__(self):

@@ -3,12 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <title>Home of the Fluffy Bunny League</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        window.onload = function() {
+        comms();
+        function comms(){
+            var commanders = {{ commanders|tojson }}
+            var html = ''
+            for ([index, element] of commanders.entries()) {
+                index = index + 1
+                console.log(element);
+                if (index % 5 == 1) {
+                    html += '<tr class="comm-table-row">\n<td class="comm-table-col"><a href="' + element.link + '" target="_blank"><img src="' + element.image + '" class="comm-image"></a></td>\n'
+                } else if (index % 5 == 0) {
+                    html += '<td class="comm-table-col"><a href="' + element.link + '" target="_blank"><img src="' + element.image + '" class="comm-image"></a></td>\n</tr>\n'
+                } else {
+                    html += '<td class="comm-table-col"><a href="' + element.link + '" target="_blank"><img src="' + element.image + '" class="comm-image"></a></td>\n'
+                }
+            }
+            console.log(html);
+            document.getElementById('commanders-table').innerHTML = html;
+        };
+        }
+    </script>
 </head>
 <body>
     {% extends "layout.html" %}
     {% block content %}
-        <div class="commanders">
-            <p>This area will eventually show the available commanders and allow me to add Commanders. </p>
+        <div class="commanders" style="width: 1200px;">
+            <table id="commanders-table">
+            </table>
         </div>
     {% endblock %}
 </body>

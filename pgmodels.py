@@ -84,6 +84,7 @@ class DraftCommander(Base):
     __table_args__ = ({"schema": "admin"})
     id = Column(Integer(), primary_key=True)
     commander_id = Column('commander_id', Integer(), ForeignKey('admin.commanders.id'))
+    draft_rank = Column(Integer())
 
 
 class RptStandings(Base):
@@ -240,6 +241,23 @@ class CommandersModel:
                    for i, column in enumerate(result_set[0].keys())}
                   for row in result_set]
         return result
+
+    def comm_page_view(self):
+        query = """
+        SELECT c.name,
+                c.image_link,
+                c.link
+        FROM admin.commanders c
+        JOIN admin.draft_commander dc
+            ON c.id = dc.commander_id
+        WHERE dc.commander_id IS NOT NULL
+        ORDER BY dc.draft_rank ASC
+        ;
+        """
+
+        self.cur.execute(query)
+        results = self.cur.fetchall()
+        return results
 
 
 class UsersModel:
