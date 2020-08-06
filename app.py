@@ -116,9 +116,11 @@ def draft():
         username = request.form['username']
         user_id = DraftingService().userid(username)
         if not user_id:
-            error = 'Username does not exist. Please register or contact ' \
-                    'admin. '
-            return render_template('draft.html', error=error)
+            flash(
+                'Username does not exist. Please register or contact admin.',
+                'danger'
+            )
+            return render_template('draft.html')
 
         comm_check = DraftingService().usercomm(user_id)
         commander = (
