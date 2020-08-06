@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, redirect, \
     url_for, flash
-from service import CommanderService, DraftingService, UserService, \
+from service import CommanderService, DraftingService, \
     ScoringService, InfoService, AdminService
 from pgmodels import User, Roles, UserAdmin, RoleAdmin
 from flask_security import Security, SQLAlchemySessionUserDatastore, \
@@ -23,7 +23,7 @@ app.config.from_pyfile('config.py')
 If DEBUG = True, set Test = True in pgmodel and database.
 Really need to figure out a better way to do this.
 """
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 
 # Initialize SQLAlch Datastore
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
@@ -154,17 +154,18 @@ def commanders():
 @roles_accepted('admin', 'commissioner')
 def create_commanders():
     # TODO: Fix method.
-    if request.method == 'POST':
-        comm_str = request.form.get("commlist").strip()
-        comm_list = comm_str.split('\n')
-        for comm in comm_list:
-            comm = comm.strip()
-            CommanderService().create(comm)
-
-        return redirect(url_for('commanders'))
-    else:
-        # TODO: Finish template.
-        return render_template('createcomm.html')
+    # if request.method == 'POST':
+    #     comm_str = request.form.get("commlist").strip()
+    #     comm_list = comm_str.split('\n')
+    #     for comm in comm_list:
+    #         comm = comm.strip()
+    #         CommanderService().create(comm)
+    #
+    #     return redirect(url_for('commanders'))
+    # else:
+    #     TODO: Finish template.
+    #     return render_template('createcomm.html')
+    return render_template('createcomm.html')
 
 
 @app.route("/log_game", methods=["GET", "POST"])
@@ -212,6 +213,15 @@ def log_game():
         player_dict = {"p_one": "p1", "p_two": "p2", "p_three": "p3",
                        "p_four": "p4"}
 
+        try:
+            game_id = game_num_to_id[int(request.form['game_num'])]
+        except KeyError:
+            flash(f"Game number {request.form['game_num']} does not exist. "
+                  f"Not logging scores for this match...", 'danger')
+            return render_template('log_game.html')
+
+        game_date = request.form['game_date']
+
         for k in player_dict:
             prefix = player_dict[k]
             if k == 'p_one':
@@ -223,18 +233,10 @@ def log_game():
             elif k == 'p_four':
                 pdict = p_four
             else:
-                pass
+                break
 
             pdict['username'] = request.form[f'{prefix}_username']
             pdict['user_id'] = un_to_uid[pdict['username']]
-            try:
-                game_id = game_num_to_id[int(request.form['game_num'])]
-            except KeyError:
-                flash(f"Game number {request.form['game_num']} does not exist. "
-                      f"Not logging scores for this match...", 'danger')
-                return render_template('log_game.html')
-
-            game_date = request.form['game_date']
             pdict['game_id'] = game_id
 
             place_dict = {
