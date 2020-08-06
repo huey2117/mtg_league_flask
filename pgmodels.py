@@ -11,7 +11,6 @@ from flask_admin.contrib import sqla
 from flask import redirect, url_for
 import json
 
-
 test = False
 db_url = os.environ['DATABASE_URL']
 try:
@@ -60,7 +59,8 @@ class UserCommander(Base):
     __table_args__ = ({"schema": "admin"})
     id = Column(Integer(), primary_key=True)
     user_id = Column('user_id', Integer(), ForeignKey('admin.users.id'))
-    commander_id = Column('commander_id', Integer(), ForeignKey('admin.commanders.id'))
+    commander_id = Column('commander_id', Integer(),
+                          ForeignKey('admin.commanders.id'))
 
 
 class Commander(Base):
@@ -83,14 +83,16 @@ class DraftCommander(Base):
     __tablename__ = 'draft_commander'
     __table_args__ = ({"schema": "admin"})
     id = Column(Integer(), primary_key=True)
-    commander_id = Column('commander_id', Integer(), ForeignKey('admin.commanders.id'))
+    commander_id = Column('commander_id', Integer(),
+                          ForeignKey('admin.commanders.id'))
     draft_rank = Column(Integer())
 
 
 class RptStandings(Base):
     __tablename__ = 'rpt_standings'
     __table_args__ = ({"schema": "admin"})
-    user_id = Column('user_id', Integer(), ForeignKey('admin.users.id'), primary_key=True)
+    user_id = Column('user_id', Integer(), ForeignKey('admin.users.id'),
+                     primary_key=True)
     pts_total = Column(Integer())
     place_last_game = Column(Integer())
     pts_last_game = Column(Integer())
@@ -143,53 +145,60 @@ class Seasons(Base):
 
 
 class UserAdmin(sqla.ModelView):
-
     # Don't display the password on the list of Users
     column_exclude_list = list = ('password',)
 
-    # Don't include the standard password field when creating or editing a User (but see below)
+    # Don't include the standard password field when creating or editing a
+    # User (but see below)
     form_excluded_columns = ('password',)
 
-    # Automatically display human-readable names for the current and available Roles when creating or editing a User
+    # Automatically display human-readable names for the current and available
+    # Roles when creating or editing a User
     column_auto_select_related = True
 
-    # Prevent administration of Users unless the currently logged-in user has the "admin" role
+    # Prevent administration of Users unless the currently logged-in user has
+    # the "admin" role
     def is_accessible(self):
-        return current_user.has_role('admin') and current_user.is_authenticated
+        return (current_user.has_role('admin')
+                and current_user.is_authenticated)
 
     def _handle_view(self, name):
         if not self.is_accessible():
             return redirect(url_for('security.login'))
 
-    # On the form for creating or editing a User, don't display a field corresponding to the model's password field.
-    # There are two reasons for this. First, we want to encrypt the password before storing in the database. Second,
-    # we want to use a password field (with the input masked) rather than a regular text field.
+    # On the form for creating or editing a User, don't display a field
+    # corresponding to the model's password field. There are two reasons
+    # for this. First, we want to encrypt the password before storing in
+    # the database. Second, we want to use a password field (with the
+    # input masked) rather than a regular text field.
     def scaffold_form(self):
 
-        # Start with the standard form as provided by Flask-Admin. We've already told Flask-Admin to exclude the
-        # password field from this form.
+        # Start with the standard form as provided by Flask-Admin. We've
+        # already told Flask-Admin to exclude the password field from
+        # this form.
         form_class = super(UserAdmin, self).scaffold_form()
 
-        # Add a password field, naming it "password2" and labeling it "New Password".
+        # Add a password field, naming it "password2" and labeling it
+        # "New Password".
         form_class.password2 = PasswordField('New Password')
         return form_class
 
-    # This callback executes when the user saves changes to a newly-created or edited User -- before the changes are
-    # committed to the database.
+    # This callback executes when the user saves changes to a newly-created
+    # or edited User -- before the changes are committed to the database.
     def on_model_change(self, form, model, is_created):
 
-        # If the password field isn't blank...
+        # If the password field isn't blank then encrypt the new password
+        # prior to storing it in the database. If the password field is blank,
+        # the existing password in the database will be retained.
         if len(model.password2):
-
-            # ... then encrypt the new password prior to storing it in the database. If the password field is blank,
-            # the existing password in the database will be retained.
             model.password = utils.hash_password(model.password2)
 
 
 # Customized Role model for SQL-Admin
 class RoleAdmin(sqla.ModelView):
 
-    # Prevent administration of Roles unless the currently logged-in user has the "admin" role
+    # Prevent administration of Roles unless the currently logged-in user
+    # has the "admin" role
     def is_accessible(self):
         return current_user.has_role('admin')
 
@@ -198,49 +207,49 @@ class CommandersModel:
     tablename = "admin.commanders"
 
     def __init__(self):
-        if test:
-            self.conn = psycopg2.connect(testdb_url)
-        else:
-            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.conn = (
+            psycopg2.connect(testdb_url) if test
+            else psycopg2.connect(db_url, sslmode='require')
+        )
         self.cur = self.conn.cursor()
 
     def __del__(self):
-        # body of destructor
         self.conn.commit()
         self.conn.close()
         self.cur.close()
 
-    def get_by_id(self, _id):
-        where_clause = f'AND id = {_id}'
-        return self.select(where_clause)
-
-    def create(self, params):
-        query = f'INSERT INTO {self.tablename} ' \
-                f'(name) ' \
-                f'VALUES (%s)' \
-                # f'"{params.get("color")}")'
-        print("Next up, {}".format(params))
-        params = (params,)
-        result = self.cur.execute(query, params)
-        return self.get_by_id(result.lastrowid)
-
-    def delete(self, commander_id):
-        query = f'DELETE FROM {self.tablename} ' \
-                f'WHERE id = {commander_id}'
-
-        self.cur.execute(query)
-        return
-
-    def select(self, where_clause=''):
-        query = f'SELECT name, color_id FROM {self.tablename} ' \
-                + where_clause
-
-        self.cur.execute(query)
-        result_set = self.cur.fetchall()
-        result = [{column: row[i]
-                   for i, column in enumerate(result_set[0].keys())}
-                  for row in result_set]
-        return result
+    # TODO: None of this is in use as written, evaluate usage and cleanup
+    # def get_by_id(self, _id):
+    #     where_clause = f'AND id = {_id}'
+    #     return self.select(where_clause)
+    #
+    # def create(self, params):
+    #     query = f'INSERT INTO {self.tablename} ' \
+    #             f'(name) ' \
+    #             f'VALUES (%s)' \
+    #         # f'"{params.get("color")}")'
+    #     print("Next up, {}".format(params))
+    #     params = (params,)
+    #     result = self.cur.execute(query, params)
+    #     return self.get_by_id(result.lastrowid)
+    #
+    # def delete(self, commander_id):
+    #     query = f'DELETE FROM {self.tablename} ' \
+    #             f'WHERE id = {commander_id}'
+    #
+    #     self.cur.execute(query)
+    #     return
+    #
+    # def select(self, where_clause=''):
+    #     query = f'SELECT name, color_id FROM {self.tablename} ' \
+    #             + where_clause
+    #
+    #     self.cur.execute(query)
+    #     result_set = self.cur.fetchall()
+    #     result = [{column: row[i]
+    #                for i, column in enumerate(result_set[0].keys())}
+    #               for row in result_set]
+    #     return result
 
     def comm_page_view(self):
         query = """
@@ -264,10 +273,10 @@ class UsersModel:
     tablename = "admin.users"
 
     def __init__(self):
-        if test:
-            self.conn = psycopg2.connect(testdb_url)
-        else:
-            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.conn = (
+            psycopg2.connect(testdb_url) if test
+            else psycopg2.connect(db_url, sslmode='require')
+        )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -275,60 +284,13 @@ class UsersModel:
         self.conn.close()
         self.cur.close()
 
-    def get_by_id(self, id):
-        where_clause = f'AND id = {id}'
-        return self.select(where_clause)
-
-    def select(self, where_clause=""):
-        query = f'SELECT username FROM {self.tablename} ' \
-                f'WHERE 1=1 ' + where_clause
-
-        self.cur.execute(query)
-        user = self.cur.fetchall()
-        if user:
-            return user[0]
-        else:
-            return user
-
-    def create_user(self, username):
-        where_clause = f"AND username = '{username}' "
-        usn_duplicate_check = self.select(where_clause)
-        if usn_duplicate_check:
-            return 'exists'
-
-        query = f'INSERT INTO {self.tablename} ' \
-                f'(username) ' \
-                f'VALUES (%s) '
-
-        params = (username,)
-        self.cur.execute(query, params)
-
-        get_id = f'SELECT max(id) FROM {self.tablename} ' \
-                f'WHERE username = %s'
-
-        gid_params = (username,)
-        self.cur.execute(get_id, gid_params)
-        uid = self.cur.fetchone()
-        return self.get_by_id(uid[0])
-
-    def update_username(self, params):
-        exists_check = self.get_by_id(params[1])
-        if not exists_check:
-            return 'invalid'
-
-        query = f"UPDATE {self.tablename} " \
-                f"SET username = %s " \
-                f"WHERE id = %s"
-        self.cur.execute(query, params)
-        return self.get_by_id(params[1])
-
 
 class UserDraftingModel:
     def __init__(self):
-        if test:
-            self.conn = psycopg2.connect(testdb_url)
-        else:
-            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.conn = (
+            psycopg2.connect(testdb_url) if test
+            else psycopg2.connect(db_url, sslmode='require')
+        )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -343,10 +305,7 @@ class UserDraftingModel:
         params = (usn,)
         self.cur.execute(query, params)
         result = self.cur.fetchone()
-        if result:
-            return result[0]
-        else:
-            return result
+        return result[0] if result else False
 
     def check_usercomm(self, uid):
         query = f'SELECT c.name ' \
@@ -359,15 +318,12 @@ class UserDraftingModel:
         params = (uid,)
         self.cur.execute(query, params)
         result = self.cur.fetchone()
-        if result:
-            return result[0]
-        else:
-            return False
+        return result[0] if result else False
 
     def draft_commander(self, uid):
         query = """
         SELECT c.id, c.name
-        FROM draft_commanders dc
+        FROM admin.draft_commander dc
         LEFT JOIN admin.commanders c
             ON dc.commander_id = c.id
         LEFT JOIN admin.user_commander uc
@@ -384,9 +340,7 @@ class UserDraftingModel:
                         INSERT INTO admin.user_commander
                         (user_id, commander_id)
                         VALUES (%s, %s)
-                        ON CONFLICT (user_id)
-                        DO UPDATE
-                        SET commander_id = EXCLUDED.commander_id
+                        ;
                         """
 
             params = (uid, commander[0])
@@ -398,10 +352,10 @@ class UserDraftingModel:
 
 class ScoringModel:
     def __init__(self):
-        if test:
-            self.conn = psycopg2.connect(testdb_url)
-        else:
-            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.conn = (
+            psycopg2.connect(testdb_url) if test
+            else psycopg2.connect(db_url, sslmode='require')
+        )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -424,15 +378,12 @@ class ScoringModel:
 
         def check_scores(uid, game_id):
             query = f"SELECT * FROM admin.games_scores " \
-                f"WHERE user_id = {uid} " \
-                f"AND game_id = {game_id};"
+                    f"WHERE user_id = {uid} " \
+                    f"AND game_id = {game_id};"
 
             self.cur.execute(query)
             results = self.cur.fetchone
-            if results:
-                return True
-            else:
-                return False
+            return True if results else False
 
         score = json.dumps(score)
 
@@ -447,10 +398,7 @@ class ScoringModel:
         self.cur.execute(query)
         check = check_scores(uid, game_id)
 
-        if check:
-            return True
-        else:
-            return False
+        return True if check else False
 
     def get_game_num_id(self):
         query = """
@@ -509,7 +457,8 @@ class ScoringModel:
         cte_mr (mr_game_id) AS
         (SELECT max(game_id) as mr_game_id
         FROM admin.games_scores)
-        INSERT INTO admin.rpt_standings (user_id, pts_total, place_last_game, pts_last_game)
+        INSERT INTO admin.rpt_standings (user_id, pts_total, place_last_game, 
+            pts_last_game)
         SELECT curr.user_id,
                 curr.pts_total,
                 mr.place_last_game,
@@ -563,8 +512,8 @@ class ScoringModel:
     def log_date(self, game_id, game_date):
         update = """
         UPDATE admin.games
-        SET date = {gd}
-        WHERE id = {gid}
+        SET date = %(gd)s
+        WHERE id = %(gid)s
         ;
         """
 
@@ -578,10 +527,10 @@ class ScoringModel:
 
 class InfoModel:
     def __init__(self):
-        if test:
-            self.conn = psycopg2.connect(testdb_url)
-        else:
-            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.conn = (
+            psycopg2.connect(testdb_url) if test
+            else psycopg2.connect(db_url, sslmode='require')
+        )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -643,18 +592,15 @@ class InfoModel:
         """
         self.cur.execute(query)
         results = self.cur.fetchone()
-        if results:
-            return results
-        else:
-            return False
+        return results if results else False
 
 
 class AdminModel:
     def __init__(self):
-        if test:
-            self.conn = psycopg2.connect(testdb_url)
-        else:
-            self.conn = psycopg2.connect(db_url, sslmode='require')
+        self.conn = (
+            psycopg2.connect(testdb_url) if test
+            else psycopg2.connect(db_url, sslmode='require')
+        )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -666,15 +612,12 @@ class AdminModel:
 
         def check_insert(season_name):
             check_query = f"SELECT * FROM admin.seasons " \
-                f"WHERE name = '{season_name}' ;"
+                          f"WHERE name = '{season_name}' ;"
 
             self.cur.execute(check_query)
             results = self.cur.fetchone()
 
-            if results:
-                return True
-            else:
-                return False
+            return True if results else False
 
         query = """
         INSERT INTO admin.seasons (name, num_games, start_date)
@@ -687,10 +630,7 @@ class AdminModel:
         if not pre_check:
             self.cur.execute(query, params)
             check = check_insert(season_name)
-            if check:
-                return True
-            else:
-                return False
+            return True if check else False
         else:
             return False
 
@@ -705,10 +645,8 @@ class AdminModel:
             """
             self.cur.execute(check_query, {"season_id": sid})
             result = self.cur.fetchone()
-            if result:
-                return result[0]
-            else:
-                return False
+            return result[0] if result else False
+
         season_name = params['season_name']
         games = params['games']
 
@@ -721,6 +659,7 @@ class AdminModel:
         sid_params = {"season_name": season_name}
         self.cur.execute(sid_query, sid_params)
         res = self.cur.fetchone()
+
         if res:
             sid = res[0]
         else:
@@ -765,10 +704,7 @@ class AdminModel:
 
         self.cur.execute(query)
         results = self.cur.fetchone()
-        if results:
-            return results
-        else:
-            return False
+        return results if results else False
 
     def start_season(self):
         season_info = self.get_season_info()

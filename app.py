@@ -1,16 +1,13 @@
-import os
-import json
-from flask import Flask, request, jsonify, render_template, redirect, \
+from flask import Flask, request, render_template, redirect, \
     url_for, flash
-from service import CommanderService, DraftingService, UserService, \
+from service import CommanderService, DraftingService, \
     ScoringService, InfoService, AdminService
 from pgmodels import User, Roles, UserAdmin, RoleAdmin
 from flask_security import Security, SQLAlchemySessionUserDatastore, \
-    login_required, utils, current_user, roles_required, roles_accepted
-from flask_security.forms import RegisterForm, Required, StringField, \
-    PasswordField, LoginForm
+    login_required, roles_accepted
+from flask_security.forms import RegisterForm, Required, StringField
 from database import db_session, init_db
-from flask_mail import Mail, Message
+from flask_mail import Mail
 from flask_admin import Admin
 import copy
 
@@ -20,15 +17,15 @@ class ExtendedRegisterForm(RegisterForm):
 
 
 app = Flask(__name__)
-# Moved configs to config file
 app.config.from_pyfile('config.py')
 
 """
-If DEBUG = True, set Test = True in pgmodel and database
+If DEBUG = True, set Test = True in pgmodel and database.
+Really need to figure out a better way to do this.
 """
 app.config['DEBUG'] = False
 
-# Initialize SQLA Datastore
+# Initialize SQLAlch Datastore
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
 
 # Initialize Flask-Security
@@ -37,18 +34,17 @@ security = Security(app, user_datastore, register_form=ExtendedRegisterForm)
 # Initialize Flask-Mail
 mail = Mail(app)
 
-
-@app.before_first_request
-def before_first_request():
-    init_db()
-
-
 # Initialize Flask-Admin
 admin = Admin(app)
 
 # Add Flask-Admin views for Users and Roles
 admin.add_view(UserAdmin(User, db_session))
 admin.add_view(RoleAdmin(Roles, db_session))
+
+
+@app.before_first_request
+def before_first_request():
+    init_db()
 
 
 def update_standings():
@@ -71,7 +67,6 @@ def index():
 
 @app.route("/home")
 def home():
-    # need to add this unless it will be handled by Vue/React
     return render_template("home.html")
 
 
@@ -80,21 +75,34 @@ def home():
 def about():
     season_number, games_total, games_played = InfoService().get_curr_season_info()
     games_info = InfoService().get_games_info()
-    games = [{"num": game[0], "theme": game[1], "budget": game[2]}
-             for game in games_info]
+    games = [
+        {"num": game[0],
+         "theme": game[1],
+         "budget": game[2]
+         }
+        for game in games_info
+    ]
     standings = None
     get_standings = ScoringService().get_standings()
     if get_standings:
-        standings = [{"username": row[0], "name": row[1], "pts_total": row[2],
-                  "place_last_game": row[3], "pts_last_game": row[4]}
-                 for row in get_standings]
+        standings = [
+            {"username": row[0],
+             "name": row[1],
+             "pts_total": row[2],
+             "place_last_game": row[3],
+             "pts_last_game": row[4]
+             }
+            for row in get_standings
+        ]
 
     curr_champ = None
     get_champ = InfoService().get_curr_champ()
     if get_champ:
-        curr_champ = {"username": get_champ[0],
-                      "name": get_champ[1],
-                      "season_name": get_champ[2]}
+        curr_champ = {
+            "username": get_champ[0],
+            "name": get_champ[1],
+            "season_name": get_champ[2]
+        }
 
     return render_template('about.html', snum=season_number, gp=games_played,
                            gt=games_total, games=games, standings=standings,
@@ -108,14 +116,17 @@ def draft():
         username = request.form['username']
         user_id = DraftingService().userid(username)
         if not user_id:
-            error = 'Username does not exist. Please register or contact ' \
-                    'admin. '
-            return render_template('draft.html', error=error)
+            flash(
+                'Username does not exist. Please register or contact admin.',
+                'danger'
+            )
+            return render_template('draft.html')
+
         comm_check = DraftingService().usercomm(user_id)
-        if comm_check:
-            commander = comm_check
-        else:
-            commander = DraftingService().draft(user_id)
+        commander = (
+            comm_check if comm_check
+            else DraftingService().draft(user_id)
+        )
 
         return render_template('draft.html', commander=commander)
 
@@ -138,55 +149,23 @@ def commanders():
     return render_template('commanders.html', commanders=comm_dicts)
 
 
-@app.route("/commanders/create", methods=["GET","POST"])
+@app.route("/commanders/create", methods=["GET", "POST"])
 @login_required
 @roles_accepted('admin', 'commissioner')
 def create_commanders():
-    if request.method == 'POST':
-        comm_str = request.form.get("commlist").strip()
-        comm_list = comm_str.split('\n')
-        for comm in comm_list:
-            comm = comm.strip()
-            CommanderService().create(comm)
-
-        return redirect(url_for('commanders'))
-    else:
-        return render_template('createcomm.html')
-
-
-@app.route("/users", methods=["GET","POST"])
-@login_required
-def users():
-    """
-    This was the janky handling of security pre-flask-sec. Remove
-    functionality once registration is live.
-    """
-    if request.method == 'POST':
-        uid = request.form['user-id']
-        sec = request.form['security'].lower()
-        usn = request.form['username']
-        if len(usn) > 30:
-            error = 'Username must be less than 30 characters. '
-            return render_template('users.html', error=error)
-
-        if sec == 'juggernaut2117':
-            params = (usn, int(uid))
-            do_update = UserService().update_username(params)
-            if do_update == 'invalid':
-                error = 'User ID incorrect or invalid, please contact admin. '
-                return render_template('users.html', error=error)
-            elif do_update:
-                flash(f'Username successfully updated to {usn}', 'success')
-                return redirect(url_for('home'))
-            else:
-                error = "An error occurred while updating, please contact" \
-                        " the admin. "
-            return render_template('users.html', error=error)
-        else:
-            error = "Security check failed. "
-            return render_template('users.html', error=error)
-    else:
-        return render_template('users.html')
+    # TODO: Fix method.
+    # if request.method == 'POST':
+    #     comm_str = request.form.get("commlist").strip()
+    #     comm_list = comm_str.split('\n')
+    #     for comm in comm_list:
+    #         comm = comm.strip()
+    #         CommanderService().create(comm)
+    #
+    #     return redirect(url_for('commanders'))
+    # else:
+    #     TODO: Finish template.
+    #     return render_template('createcomm.html')
+    return render_template('createcomm.html')
 
 
 @app.route("/log_game", methods=["GET", "POST"])
@@ -196,7 +175,7 @@ def log_game():
         # Game Scores will be stored in the DB
         game_score = []
 
-        # map usernames to userids
+        # map username to user_id
         un_to_uid = {}
         pairs = ScoringService().get_uid_username_pairs()
         for row in pairs:
@@ -233,6 +212,16 @@ def log_game():
         # Fill player dictionaries and append to games list
         player_dict = {"p_one": "p1", "p_two": "p2", "p_three": "p3",
                        "p_four": "p4"}
+
+        try:
+            game_id = game_num_to_id[int(request.form['game_num'])]
+        except KeyError:
+            flash(f"Game number {request.form['game_num']} does not exist. "
+                  f"Not logging scores for this match...", 'danger')
+            return render_template('log_game.html')
+
+        game_date = request.form['game_date']
+
         for k in player_dict:
             prefix = player_dict[k]
             if k == 'p_one':
@@ -244,32 +233,22 @@ def log_game():
             elif k == 'p_four':
                 pdict = p_four
             else:
-                pass
+                break
 
             pdict['username'] = request.form[f'{prefix}_username']
             pdict['user_id'] = un_to_uid[pdict['username']]
-            try:
-                game_id = game_num_to_id[int(request.form['game_num'])]
-            except KeyError:
-                flash(f"Game number {request.form['game_num']} does not exist. "
-                      f"Not logging scores for this match...", 'danger')
-                return render_template('log_game.html')
-
-            game_date = request.form['game_date']
             pdict['game_id'] = game_id
 
-            if request.form[f'{prefix}_place'] == 'first':
-                pdict['place'] = 1
-                pdict['pts_total'] += 4
-            elif request.form[f'{prefix}_place'] == 'second':
-                pdict['place'] = 2
-                pdict['pts_total'] += 3
-            elif request.form[f'{prefix}_place'] == 'third':
-                pdict['place'] = 3
-                pdict['pts_total'] += 2
-            elif request.form[f'{prefix}_place'] == 'fourth':
-                pdict['place'] = 4
-                pdict['pts_total'] += 1
+            place_dict = {
+                "1": 4,
+                "2": 3,
+                "3": 2,
+                "4": 1
+            }
+
+            place = request.form[f'{prefix}_place']
+            pdict['place'] = int(place)
+            pdict['pts_total'] += place_dict[place]
 
             if request.form.get(f'{prefix}_firstblood', False):
                 pdict['first_blood'] = True
@@ -285,15 +264,9 @@ def log_game():
                 pdict['commfourplus'] = True
                 pdict['pts_total'] += 1
 
-            if request.form[f'{prefix}_save'] == 'one':
-                pdict['save'] = 1
-                pdict['pts_total'] += 1
-            elif request.form[f'{prefix}_save'] == 'two':
-                pdict['save'] = 2
-                pdict['pts_total'] += 2
-            elif request.form[f'{prefix}_save'] == 'three':
-                pdict['save'] = 3
-                pdict['pts_total'] += 3
+            saves = int(request.form[f'{prefix}_save'])
+            pdict['save'] = saves
+            pdict['pts_total'] += saves
 
             if request.form.get(f'{prefix}_commkill', False):
                 pdict['commkill'] = True
@@ -323,7 +296,7 @@ def log_game():
             game_id = score['game_id']
             pts_total = score['pts_total']
 
-            # add game_id
+            # log game + user record in db
             insert = ScoringService().add_scores(uid, game_id, pts_total,
                                                  score)
             if insert:
@@ -356,8 +329,8 @@ def rules():
     return render_template('rules.html')
 
 
-@app.route('/season_admin', methods=['GET','POST'])
-@roles_accepted('admin','commissioner')
+@app.route('/season_admin', methods=['GET', 'POST'])
+@roles_accepted('admin', 'commissioner')
 def season_admin():
     next_season_name = None
     curr_season_name = None
@@ -376,13 +349,14 @@ def season_admin():
 @roles_accepted('admin', 'commissioner')
 def create_season():
     # redirects from create season form in season_admin
-    params = {"season-name": request.form['season-name'],
-              "num-games": int(request.form['num-games']),
-              "start-date": request.form['start-date']
-              }
+    params = {
+        "season-name": request.form['season-name'],
+        "num-games": int(request.form['num-games']),
+        "start-date": request.form['start-date']
+    }
 
     # Protecting myself from my own stupid data entry mistakes
-    if 'season' not in params['season-name'].lower()\
+    if 'season' not in params['season-name'].lower() \
             and len(params['season-name'] == 1):
         params['season-name'] = f"Season {params['season-name']}"
 
@@ -392,7 +366,7 @@ def create_season():
         state = 'success'
     else:
         fmsg = f"{params['season-name']} either already exists " \
-            "or failed to create. "
+               "or failed to create. "
         state = 'danger'
     flash(fmsg, state)
     return redirect(url_for('season_admin'))
@@ -421,9 +395,10 @@ def add_games_to_season():
         games.append(game)
 
     num_games = len(games)
-    params = {"season_name": season_name,
-              "games": games
-              }
+    params = {
+        "season_name": season_name,
+        "games": games
+    }
 
     add = AdminService().add_games_to_season(params)
     if add == num_games:
@@ -463,6 +438,7 @@ def start_season():
 @app.route('/log_decks', methods=['GET', 'POST'])
 @roles_accepted('admin', 'commissioner', 'scorekeeper')
 def log_decks():
+    # TODO: Build decklist logger
     # Page Includes:
     # Logging Decks by User/Game
     # Anything else?
