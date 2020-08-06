@@ -12,7 +12,7 @@ from flask import redirect, url_for
 import json
 
 
-test = False
+test = True
 db_url = os.environ['DATABASE_URL']
 try:
     testdb_url = os.environ['TESTDB_URL']
