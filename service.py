@@ -6,16 +6,6 @@ class CommanderService:
     def __init__(self):
         self.model = CommandersModel()
 
-    def create(self, params):
-        self.model.create(params)
-
-    def delete(self, commander_id):
-        return self.model.delete(commander_id)
-
-    def select(self):
-        response = self.model.select()
-        return response
-
     def comm_page_view(self):
         response = self.model.comm_page_view()
         return response
@@ -44,14 +34,6 @@ class DraftingService:
 class UserService:
     def __init__(self):
         self.model = UsersModel()
-
-    def create(self, username):
-        response = self.model.create_user(username)
-        return response
-
-    def update_username(self, params):
-        response = self.model.update_username(params)
-        return response
 
 
 class ScoringService:
