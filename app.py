@@ -211,6 +211,7 @@ def log_game():
         # Fill player dictionaries and append to games list
         player_dict = {"p_one": "p1", "p_two": "p2", "p_three": "p3",
                        "p_four": "p4"}
+
         for k in player_dict:
             prefix = player_dict[k]
             if k == 'p_one':
@@ -236,18 +237,16 @@ def log_game():
             game_date = request.form['game_date']
             pdict['game_id'] = game_id
 
-            if request.form[f'{prefix}_place'] == 'first':
-                pdict['place'] = 1
-                pdict['pts_total'] += 4
-            elif request.form[f'{prefix}_place'] == 'second':
-                pdict['place'] = 2
-                pdict['pts_total'] += 3
-            elif request.form[f'{prefix}_place'] == 'third':
-                pdict['place'] = 3
-                pdict['pts_total'] += 2
-            elif request.form[f'{prefix}_place'] == 'fourth':
-                pdict['place'] = 4
-                pdict['pts_total'] += 1
+            place_dict = {
+                "1": 4,
+                "2": 3,
+                "3": 2,
+                "4": 1
+            }
+
+            place = request.form[f'{prefix}_place']
+            pdict['place'] = int(place)
+            pdict['pts_total'] += place_dict[place]
 
             if request.form.get(f'{prefix}_firstblood', False):
                 pdict['first_blood'] = True
@@ -263,15 +262,9 @@ def log_game():
                 pdict['commfourplus'] = True
                 pdict['pts_total'] += 1
 
-            if request.form[f'{prefix}_save'] == 'one':
-                pdict['save'] = 1
-                pdict['pts_total'] += 1
-            elif request.form[f'{prefix}_save'] == 'two':
-                pdict['save'] = 2
-                pdict['pts_total'] += 2
-            elif request.form[f'{prefix}_save'] == 'three':
-                pdict['save'] = 3
-                pdict['pts_total'] += 3
+            saves = int(request.form[f'{prefix}_save'])
+            pdict['save'] = saves
+            pdict['pts_total'] += saves
 
             if request.form.get(f'{prefix}_commkill', False):
                 pdict['commkill'] = True

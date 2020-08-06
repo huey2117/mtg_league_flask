@@ -512,8 +512,8 @@ class ScoringModel:
     def log_date(self, game_id, game_date):
         update = """
         UPDATE admin.games
-        SET date = {gd}
-        WHERE id = {gid}
+        SET date = %(gd)s
+        WHERE id = %(gid)s
         ;
         """
 
