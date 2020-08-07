@@ -305,7 +305,7 @@ class UserDraftingModel:
         params = (usn,)
         self.cur.execute(query, params)
         result = self.cur.fetchone()
-        return result[0] if result else False
+        return result[0] or False
 
     def check_usercomm(self, uid):
         query = f'SELECT c.name ' \
@@ -318,7 +318,7 @@ class UserDraftingModel:
         params = (uid,)
         self.cur.execute(query, params)
         result = self.cur.fetchone()
-        return result[0] if result else False
+        return result[0] or False
 
     def draft_commander(self, uid):
         query = """
@@ -592,7 +592,7 @@ class InfoModel:
         """
         self.cur.execute(query)
         results = self.cur.fetchone()
-        return results if results else False
+        return results or False
 
 
 class AdminModel:
@@ -645,7 +645,7 @@ class AdminModel:
             """
             self.cur.execute(check_query, {"season_id": sid})
             result = self.cur.fetchone()
-            return result[0] if result else False
+            return result[0] or False
 
         season_name = params['season_name']
         games = params['games']
