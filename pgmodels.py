@@ -268,6 +268,38 @@ class CommandersModel:
         results = self.cur.fetchall()
         return results
 
+    def team_page(self):
+        query = """
+        SELECT json_agg(
+            json_build_object(
+                'owner', t.username,
+                'team', t.teams
+                )
+            )
+        FROM (
+            SELECT u.username,
+                json_agg(
+                    json_build_object(
+                        'name', c.name,
+                        'image', c.image_link,
+                        'link', c.link
+                        )
+                    ORDER BY c.name 
+                    ) AS teams
+            FROM ADMIN.commanders c
+            LEFT JOIN ADMIN.user_teams ut 
+                ON c.id = ut.commander_id
+            JOIN ADMIN.users u 
+                ON u.id = ut.user_id
+            GROUP BY u.username
+        ) AS t
+        ;
+        """
+
+        self.cur.execute(query)
+        results = self.cur.fetchall()
+        return results[0][0]
+
 
 class UsersModel:
     tablename = "admin.users"

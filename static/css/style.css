@@ -96,6 +96,11 @@ div.gamelog {
     border-spacing: 0 10px;
 }
 
+.team-table {
+    width: 1200px;
+    border-spacing: 0 10px;
+}
+
 .comm-table-col {
     max-width: 200px;
     height: auto;
@@ -262,6 +267,16 @@ h2 {
   letter-spacing: -1px;
   height: 18px;
   margin: 10px 0 0 0;
+}
+
+h2.team-header {
+  font-size: 36px;
+  height: 36px;
+  display: flex;
+  text-align: center;
+  margin: 0px 0 20px 0;
+  text-decoration: underline;
+  color: #393f4d;
 }
 
 h3 {
@@ -476,6 +491,12 @@ form input[type="submit"]:hover {
     width: 800px;
     border-bottom: 1px solid black;
     margin: 10px 0 5px 0;
+}
+
+.team-separator {
+    width: 1200px;
+    border-bottom: 1px solid black;
+    margin: 10px 0 15px 0;
 }
 
 .info {

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Season 2 Teams</title>
+        <script>
+        window.onload = function() {
+            var player;
+            var teams = {{ teams|tojson }};
+            for (player of teams) {
+                console.log(player);
+                comms(player["team"], player["owner"]);
+                function comms(team_list, table){
+                    console.log("Calling Comms");
+                    var commanders = team_list;
+                    var html = '';
+                    var table = table;
+                    for ([index, element] of commanders.entries()) {
+                        index += 1
+                        if (index % 5 == 1) {
+                            html += '<tr class="comm-table-row">\n<td class="comm-table-col"><a href="' + element.link + '" target="_blank"><img src="' + element.image + '" class="comm-image"></a></td>\n'
+                        } else if (index % 5 == 0) {
+                            html += '<td class="comm-table-col"><a href="' + element.link + '" target="_blank"><img src="' + element.image + '" class="comm-image"></a></td>\n</tr>\n'
+                        } else {
+                            html += '<td class="comm-table-col"><a href="' + element.link + '" target="_blank"><img src="' + element.image + '" class="comm-image"></a></td>\n'
+                        }
+                    }
+                    document.getElementById(table).innerHTML = html;
+                };
+            };
+        }
+    </script>
+</head>
+<body>
+    {% extends "layout.html" %}
+    {% block content %}
+        <div class="commanders" style="width: 1200px;">
+            <h2 class="team-header">Team Inebis</h2>
+            <table id="inebis2112" class="team-table">
+            </table>
+            <div class="team-separator"></div>
+            <h2 class="team-header">Team Dovinci</h2>
+            <table id="dovinci" class="team-table">
+            </table>
+            <div class="team-separator"></div>
+            <h2 class="team-header">Team Juggernaut</h2>
+            <table id="juggernaut2117" class="team-table">
+            </table>
+            <div class="team-separator"></div>
+            <h2 class="team-header">Team Veritas</h2>
+            <table id="veritas2112" class="team-table">
+            </table>
+        </div>
+    {% endblock %}
+</body>
+</html>

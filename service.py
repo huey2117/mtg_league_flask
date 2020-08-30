@@ -10,6 +10,10 @@ class CommanderService:
         response = self.model.comm_page_view()
         return response
 
+    def team_page(self):
+        response = self.model.team_page()
+        return response
+
 
 class DraftingService:
     def __init__(self):

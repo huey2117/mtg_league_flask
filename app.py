@@ -149,6 +149,14 @@ def commanders():
     return render_template('commanders.html', commanders=comm_dicts)
 
 
+@app.route("/teams", methods=["GET"])
+@login_required
+def teams():
+    teamdb = CommanderService().team_page()
+
+    return render_template('teams.html', teams=teamdb)
+
+
 @app.route("/commanders/create", methods=["GET", "POST"])
 @login_required
 @roles_accepted('admin', 'commissioner')
