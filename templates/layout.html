@@ -26,6 +26,7 @@
                         </div></li>
                     <li><a class="menu-item" href=" {{ url_for('commanders') }}">Commanders</a></li>
                     <li><a class="menu-item" href=" {{ url_for('draft') }}">Draft</a></li>
+                    <li><a class="menu-item" href=" {{url_for('teams') }}">Teams</a></li>
                     <li>{% if current_user.has_role('admin')
                             or current_user.has_role('commissioner')
                             or current_user.has_role('scorekeeper') %}
