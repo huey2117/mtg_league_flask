@@ -96,7 +96,28 @@
                     </div>
                 </form>
             </div>
+            <button id="challenges" type="button" class="collapsible">Roll Challenges</button>
+            <div class="content">
+                <form id="roll-challenges" class="season-admin-form" action="/challenges" method="post">
+                    <button id="roll" type="submit">Roll Challenges</button>
+                </form>
+            </div>
             <div class="season-admin-return">
+                {% if challenge_dict %}
+                    <table id="challenge-table">
+                    {% if challenge_dict['num'] == 1 %}
+                        <th class="challenge-text" colspan="2">{{ challenge_dict['num'] }} challenge chosen</th>
+                    {% else %}
+                        <th colspan="2">{{ challenge_dict['num'] }} challenges chosen</th>
+                    {% endif %}
+                    {% for challenge in challenge_dict['challenges'] %}
+                        <tr class="challenge-text">
+                            <td class="challenge-cols">Challenge #{{ loop.index }}</td>
+                            <td class="challenge-cols">{{ challenge }}</td>
+                        </tr>
+                    {% endfor %}
+                    </table>
+                {% endif %}
                 <strong>
                     {{ message }}
                 </strong>

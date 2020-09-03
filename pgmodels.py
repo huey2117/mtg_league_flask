@@ -784,3 +784,30 @@ class AdminModel:
 
                 self.cur.execute(start_new_query, {"sid": new_active_id})
                 return True
+
+    def roll_challenges(self, num):
+        query = """
+        SELECT challenge
+        FROM admin.challenges
+        WHERE used = False
+        ;
+        """
+
+        update_query = """
+        UPDATE admin.challenges
+        SET used = True
+        WHERE challenge = %s
+        ;
+        """
+
+        self.cur.execute(query)
+        challenge_list = self.cur.fetchall()
+        random.shuffle(challenge_list)
+        selected_challenges = [
+            challenge_list.pop()
+            for i in range(num)
+        ]
+
+        self.cur.executemany(update_query, selected_challenges)
+
+        return selected_challenges

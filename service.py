@@ -109,3 +109,7 @@ class AdminService:
     def start_season(self):
         response = self.model.start_season()
         return response
+
+    def roll_challenges(self, params):
+        response = self.model.roll_challenges(params)
+        return response

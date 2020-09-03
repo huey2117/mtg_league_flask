@@ -10,6 +10,7 @@ from database import db_session, init_db
 from flask_mail import Mail
 from flask_admin import Admin
 import copy
+import random
 
 
 class ExtendedRegisterForm(RegisterForm):
@@ -378,6 +379,32 @@ def create_season():
         state = 'danger'
     flash(fmsg, state)
     return redirect(url_for('season_admin'))
+
+
+@app.route('/challenges', methods=['GET', 'POST'])
+@roles_accepted('admin', 'commissioner')
+def challenges():
+    if request.method == 'POST':
+        num_challenges = random.randint(1, 3)
+        challenges_sql = AdminService().roll_challenges(num_challenges)
+        selected_challenges = [challenge[0] for challenge in challenges_sql]
+        challenge_dict = {
+            "num": num_challenges,
+            "challenges": selected_challenges
+        }
+
+        season_info = AdminService().get_season_info()
+        curr_season_name = season_info[1] or None
+        next_season_name = season_info[3] or None
+
+        return render_template('season_admin.html',
+                               next_season=next_season_name,
+                               curr_season=curr_season_name,
+                               challenge_dict=challenge_dict
+                               )
+
+    else:
+        return redirect(url_for('season_admin'))
 
 
 @app.route('/add_games', methods=['POST'])
