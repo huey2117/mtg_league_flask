@@ -8,10 +8,8 @@
             var player;
             var teams = {{ teams|tojson }};
             for (player of teams) {
-                console.log(player);
                 comms(player["team"], player["owner"]);
                 function comms(team_list, table){
-                    console.log("Calling Comms");
                     var commanders = team_list;
                     var html = '';
                     var table = table;
