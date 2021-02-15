@@ -24,7 +24,7 @@ app.config.from_pyfile('config.py')
 If DEBUG = True, set Test = True in pgmodel and database.
 Really need to figure out a better way to do this.
 """
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 
 # Initialize SQLAlch Datastore
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
