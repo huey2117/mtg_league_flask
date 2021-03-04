@@ -1,6 +1,7 @@
 # MTG League Flask App 
 ## About
 Python/Flask/PostgreSQL/JavaScript/CSS/HTML
+
 [The Site](https://fluffybunnyleague.herokuapp.com/) - This is hosted as a free tier site on [Heroku](https://heroku.com), so it might take 30-60 seconds to spin up as Heroku puts the site to sleep if there has not been any recent activity.
 
 This began as a small project to facilitate a random secret draft from a small pool for a Magic the Gathering Commander league and to help me learn Flask. It evolved to handle functionality that we had previously been tracking in Google Drive docs and sheets. The site is an ever evolving web app as we change seasons and change the structure of the league. 
