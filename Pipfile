@@ -16,6 +16,7 @@ flask-sqlalchemy = "*"
 sqlalchemy = "*"
 "discord.py" = "*"
 python-dotenv = "*"
+email-validator = "*"
 
 [requires]
 python_version = "3.8"
