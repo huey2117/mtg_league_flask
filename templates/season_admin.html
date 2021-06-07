@@ -89,7 +89,7 @@
             </div>
             <button type="button" class="collapsible">Force Standings Rebuild</button>
             <div class="content">
-                <form id="refresh-standings" name="refresh-standings" class="season-admin-form">
+                <form id="refresh-standings" name="refresh-standings" class="season-admin-form" action="/rebuild" method="post">
                     <label id="sanity-check-label" for="sanity-check">Are you 100% sure?</label>
                     <div class="season-admin-subbtn">
                         <input type="submit" id="sanity-check" value="Yes"/>

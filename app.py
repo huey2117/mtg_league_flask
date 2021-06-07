@@ -485,6 +485,19 @@ def start_season():
     return redirect(url_for('season_admin'))
 
 
+@app.route('/rebuild', methods=['POST'])
+@roles_accepted('admin')
+def rebuild():
+    if request.method == 'POST':
+        us = update_standings()
+        if us:
+            flash('Standings updated.', 'success')
+        else:
+            flash('Standings update failed. ', 'danger')
+
+    return redirect(url_for('season_admin'))
+
+
 @app.route('/log_decks', methods=['GET', 'POST'])
 @roles_accepted('admin', 'commissioner', 'scorekeeper')
 def log_decks():
