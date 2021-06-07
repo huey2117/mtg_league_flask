@@ -1,16 +1,23 @@
-from flask import Flask, request, render_template, redirect, \
-    url_for, flash
+# App Imports
 from service import CommanderService, DraftingService, \
     ScoringService, InfoService, AdminService
 from pgmodels import User, Roles, UserAdmin, RoleAdmin
+from database import db_session, init_db
+
+# General Imports
+import copy
+import random
+import os
+from dotenv import load_dotenv
+
+# Flask Imports
+from flask import Flask, request, render_template, redirect, \
+    url_for, flash
 from flask_security import Security, SQLAlchemySessionUserDatastore, \
     login_required, roles_accepted
 from flask_security.forms import RegisterForm, Required, StringField
-from database import db_session, init_db
 from flask_mail import Mail
 from flask_admin import Admin
-import copy
-import random
 
 
 class ExtendedRegisterForm(RegisterForm):
@@ -19,12 +26,9 @@ class ExtendedRegisterForm(RegisterForm):
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
+load_dotenv()
 
-"""
-If DEBUG = True, set Test = True in pgmodel and database.
-Really need to figure out a better way to do this.
-"""
-app.config['DEBUG'] = False
+app.config['DEBUG'] = os.getenv('APP_DEBUG')
 
 # Initialize SQLAlch Datastore
 user_datastore = SQLAlchemySessionUserDatastore(db_session, User, Roles)
@@ -84,7 +88,8 @@ def about():
     games = [
         {"num": game[0],
          "theme": game[1],
-         "budget": game[2]
+         "budget": game[2],
+         "flex": game[3]
          }
         for game in games_info
     ]
@@ -210,6 +215,7 @@ def log_game():
             "first_blood": False,
             "commcast": False,
             "commfourplus": False,
+            "challenge": 0,
             "save": 0,
             "commkill": False,
             "attlast": False,
@@ -278,6 +284,10 @@ def log_game():
                 pdict['commfourplus'] = True
                 pdict['pts_total'] += 1
 
+            challenge = int(request.form[f'{prefix}_chall'])
+            pdict['challenge'] = challenge
+            pdict['pts_total'] += challenge
+
             saves = int(request.form[f'{prefix}_save'])
             pdict['save'] = saves
             pdict['pts_total'] += saves
@@ -336,10 +346,6 @@ def log_game():
 
 @app.route('/rules', methods=['GET'])
 def rules():
-    # Page Includes:
-    # Full Breakdown of Last Game
-    # Current Season by Game
-    # Scoring Ruleset Breakdown
     return render_template('rules.html')
 
 
@@ -467,6 +473,10 @@ def start_season():
             us = update_standings()
             if not us:
                 flash('Standings update failed', 'danger')
+        elif new_season == 0:
+            fmsg = 'Season cannot be started without games!' \
+                   ' Add games and try again. '
+            state = 'danger'
         else:
             fmsg = 'Season cannot be started! '
             state = 'danger'

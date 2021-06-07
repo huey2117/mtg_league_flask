@@ -2,16 +2,15 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
+from dotenv import load_dotenv
 
 
-test = False
-if test:
-    try:
-        db_url = os.environ['TESTDB_URL']
-    except:
-        db_url = None
-else:
-    db_url = os.environ['DATABASE_URL']
+load_dotenv()
+db_url = (
+    os.environ['TESTDB_URL']
+    if os.getenv('APP_DEBUG')
+    else os.environ['DATABASE_URL']
+          )
 
 engine = create_engine(db_url, convert_unicode=True)
 db_session = scoped_session(sessionmaker(autocommit=False,

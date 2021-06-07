@@ -102,14 +102,14 @@ div.gamelog {
 }
 
 .comm-table-col {
-    max-width: 200px;
+    max-width: 135px;
     height: auto;
     padding: 0px;
-    margin: 0px 20px;
+    margin: 0px 6px;
 }
 
 .comm-image {
-    max-width: 200px;
+    max-width: 135px;
     height: auto;
 }
 
