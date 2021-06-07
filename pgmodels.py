@@ -10,13 +10,15 @@ from sqlalchemy import Boolean, DateTime, Column, Integer, String, \
 from flask_admin.contrib import sqla
 from flask import redirect, url_for
 import json
+from dotenv import load_dotenv
 
-test = False
-db_url = os.environ['DATABASE_URL']
-try:
-    testdb_url = os.environ['TESTDB_URL']
-except:
-    testdb_url = None
+load_dotenv()
+
+db_url = (
+    os.environ['TESTDB_URL']
+    if os.getenv('APP_DEBUG')
+    else os.environ['DATABASE_URL'].replace('postgres://', 'postgresql://', 1)
+)
 
 
 class RolesUsers(Base):
@@ -207,10 +209,10 @@ class CommandersModel:
     tablename = "admin.commanders"
 
     def __init__(self):
-        self.conn = (
-            psycopg2.connect(testdb_url) if test
-            else psycopg2.connect(db_url, sslmode='require')
-        )
+        self.conn = (psycopg2.connect(db_url)
+                     if os.getenv('APP_DEBUG')
+                     else psycopg2.connect(db_url, sslmode='require')
+                     )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -305,10 +307,10 @@ class UsersModel:
     tablename = "admin.users"
 
     def __init__(self):
-        self.conn = (
-            psycopg2.connect(testdb_url) if test
-            else psycopg2.connect(db_url, sslmode='require')
-        )
+        self.conn = (psycopg2.connect(db_url)
+                     if os.getenv('APP_DEBUG')
+                     else psycopg2.connect(db_url, sslmode='require')
+                     )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -319,10 +321,10 @@ class UsersModel:
 
 class UserDraftingModel:
     def __init__(self):
-        self.conn = (
-            psycopg2.connect(testdb_url) if test
-            else psycopg2.connect(db_url, sslmode='require')
-        )
+        self.conn = (psycopg2.connect(db_url)
+                     if os.getenv('APP_DEBUG')
+                     else psycopg2.connect(db_url, sslmode='require')
+                     )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -384,10 +386,10 @@ class UserDraftingModel:
 
 class ScoringModel:
     def __init__(self):
-        self.conn = (
-            psycopg2.connect(testdb_url) if test
-            else psycopg2.connect(db_url, sslmode='require')
-        )
+        self.conn = (psycopg2.connect(db_url)
+                     if os.getenv('APP_DEBUG')
+                     else psycopg2.connect(db_url, sslmode='require')
+                     )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -479,6 +481,32 @@ class ScoringModel:
         SELECT * FROM admin.rpt_standings
         ;"""
 
+        def check_for_season_start():
+            check_games_played = """
+            SELECT count(g.id)
+            FROM admin.games g
+            JOIN admin.seasons s
+                ON g.season_id = s.id
+            LEFT JOIN ADMIN.games_scores gs
+                ON g.id = gs.game_id 
+            WHERE s.is_current = TRUE
+                AND gs.game_id IS NOT NULL 
+            """
+
+            self.cur.execute(check_games_played)
+            return (
+                True
+                if self.cur.fetchone()[0] == 0
+                else False)
+
+        season_start_placeholders = """
+        UPDATE admin.rpt_standings
+        SET pts_total = 0,
+            place_last_game = 0,
+            pts_last_game = 0
+        ;
+        """
+
         rebuild_standings = """
         WITH cte_curr (game_id) AS
         (SELECT g.id
@@ -524,7 +552,10 @@ class ScoringModel:
         self.cur.execute(create_standings_backup)
         self.cur.execute(cleanup_backup)
         self.cur.execute(update_backup)
-        self.cur.execute(rebuild_standings)
+        if check_for_season_start():
+            self.cur.execute(season_start_placeholders)
+        else:
+            self.cur.execute(rebuild_standings)
 
         return True
 
@@ -559,10 +590,10 @@ class ScoringModel:
 
 class InfoModel:
     def __init__(self):
-        self.conn = (
-            psycopg2.connect(testdb_url) if test
-            else psycopg2.connect(db_url, sslmode='require')
-        )
+        self.conn = (psycopg2.connect(db_url)
+                     if os.getenv('APP_DEBUG')
+                     else psycopg2.connect(db_url, sslmode='require')
+                     )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -593,7 +624,8 @@ class InfoModel:
         query = """
         SELECT g.game_num,
                 g.theme,
-                g.budget
+                g.budget,
+                g.flex
         FROM admin.games g
         JOIN admin.seasons s
             on g.season_id = s.id
@@ -629,10 +661,10 @@ class InfoModel:
 
 class AdminModel:
     def __init__(self):
-        self.conn = (
-            psycopg2.connect(testdb_url) if test
-            else psycopg2.connect(db_url, sslmode='require')
-        )
+        self.conn = (psycopg2.connect(db_url)
+                     if os.getenv('APP_DEBUG')
+                     else psycopg2.connect(db_url, sslmode='require')
+                     )
         self.cur = self.conn.cursor()
 
     def __del__(self):
@@ -740,6 +772,7 @@ class AdminModel:
 
     def start_season(self):
         season_info = self.get_season_info()
+
         if season_info[3]:
             new_active_id = season_info[2]
             old_active_id = season_info[0]
@@ -756,7 +789,7 @@ class AdminModel:
             if not result:
                 return False
             elif result[0] == 0:
-                return False
+                return 0
             else:
                 deactivate_query = """
                             WITH cte_winner (winner_user_id) AS

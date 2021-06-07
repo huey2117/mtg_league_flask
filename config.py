@@ -31,6 +31,7 @@ MAIL_DEFAULT_SENDER = ('Fluffy Bunny Admins', 'noreply.fluffybunny@gmail.com')
 MAIL_MAX_EMAILS = 5
 MAIL_SUPPRESS_SEND = False
 MAIL_ASCII_ATTACHMENTS = False
+MAIL_DEBUG = False
 
 # Flask-Admin Configs
 FLASK_ADMIN_SWATCH = 'sandstone'
