@@ -9,7 +9,7 @@ load_dotenv()
 db_url = (
     os.environ['TESTDB_URL']
     if os.getenv('APP_DEBUG')
-    else os.environ['DATABASE_URL']
+    else os.environ['DATABASE_URL'].replace('postgres://', 'postgresql://', 1)
           )
 
 engine = create_engine(db_url, convert_unicode=True)

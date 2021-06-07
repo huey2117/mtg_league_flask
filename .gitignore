@@ -3,3 +3,4 @@ scryfall-oracle-cards.json
 scryfall-oracle*
 *.pyc
 *.env
+.env
