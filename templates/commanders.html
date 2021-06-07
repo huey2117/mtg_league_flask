@@ -12,9 +12,9 @@
             var html = ''
             for ([index, element] of commanders.entries()) {
                 index = index + 1
-                if (index % 5 == 1) {
+                if (index % 8 == 1) {
                     html += '<tr class="comm-table-row">\n<td class="comm-table-col"><a href="' + element.link + '" target="_blank"><img src="' + element.image + '" class="comm-image"></a></td>\n'
-                } else if (index % 5 == 0) {
+                } else if (index % 8 == 0) {
                     html += '<td class="comm-table-col"><a href="' + element.link + '" target="_blank"><img src="' + element.image + '" class="comm-image"></a></td>\n</tr>\n'
                 } else {
                     html += '<td class="comm-table-col"><a href="' + element.link + '" target="_blank"><img src="' + element.image + '" class="comm-image"></a></td>\n'

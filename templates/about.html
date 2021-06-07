@@ -74,10 +74,10 @@
                 <h2>{{ snum }} Themes and Budgets</h2>
                 <div id="season-themes">
                     {% for game in games %}
-                    {% if game.budget != 0 %}
-                    <span>Game {{ game.num }} - ${{ game.budget }} - {{ game.theme }}</span>
+                    {% if game.flex %}
+                    <span>Game {{ game.num }} - ${{ game.budget }} (F) - {{ game.theme }}</span>
                     {% else %}
-                    <span>Game {{ game.num }} - None - {{ game.theme }}</span>
+                    <span>Game {{ game.num }} - ${{ game.budget }} - {{ game.theme}}</span>
                     {% endif %}
                     {% endfor %}
                 </div>
