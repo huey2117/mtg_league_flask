@@ -260,10 +260,10 @@ def log_game():
             pdict['game_id'] = game_id
 
             place_dict = {
-                "1": 4,
-                "2": 3,
-                "3": 2,
-                "4": 1
+                "1": 8,
+                "2": 6,
+                "3": 4,
+                "4": 2
             }
 
             place = request.form[f'{prefix}_place']
