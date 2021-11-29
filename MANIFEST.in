@@ -1,0 +1,4 @@
+include edh_league/schema.sql
+graft edh_league/static
+graft edh_league/templates
+global-exclude *.pyc
