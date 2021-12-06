@@ -5,6 +5,8 @@ scryfall-oracle*
 *.env
 .env
 
+.idea/*
+
 venv/
 
 *.pyc

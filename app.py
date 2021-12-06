@@ -53,7 +53,6 @@ def before_first_request():
 
 
 def update_standings():
-    # This calls a full backup and rebuild of the rpt_standings table
     standings = ScoringService().rebuild_standings()
     if standings:
         return True

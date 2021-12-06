@@ -9,6 +9,10 @@ flask-migrate = "*"
 flask-login = "*"
 flask-sqlalchemy = "*"
 python-dotenv = "*"
+is-safe-url = "*"
+psycopg2 = "*"
+pytest = "*"
+coverage = "*"
 
 [dev-packages]
 
