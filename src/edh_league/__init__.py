@@ -3,8 +3,8 @@ import os
 from flask import Flask
 from flask_migrate import Migrate
 
-from edh_league.login import login_manager
-from edh_league.sqla import sqla
+from src.edh_league.login import login_manager
+from src.edh_league.sqla import sqla
 from . import auth
 from . import db
 

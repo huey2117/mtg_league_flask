@@ -1,6 +1,6 @@
 from sqlalchemy.orm import validates
 
-from edh_league.sqla import sqla
+from src.edh_league.sqla import sqla
 
 
 class Roles(sqla.Model):

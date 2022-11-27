@@ -1,6 +1,6 @@
 from urllib.parse import urlparse
 
-from edh_league.db import get_db
+from src.edh_league.db import get_db
 from flask import Blueprint
 from flask import abort
 from flask import flash

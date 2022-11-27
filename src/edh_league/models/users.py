@@ -3,8 +3,8 @@ from uuid import uuid4
 from flask_login import UserMixin
 from sqlalchemy.orm import validates
 
-from edh_league.login import login_manager
-from edh_league.sqla import sqla
+from src.edh_league.login import login_manager
+from src.edh_league.sqla import sqla
 
 
 class Users(UserMixin, sqla.Model):
