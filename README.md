@@ -1,4 +1,9 @@
-# MTG League Flask App 
+# MTG League Flask App - built 2019
+
+## NOTE:
+This site is no longer functional as Heroku removed their free tier and the group of people using it no longer needed the site, so I did not bother migrating the site.
+
+
 ## About
 Python/Flask/PostgreSQL/JavaScript/CSS/HTML
 
